@@ -1,23 +1,27 @@
 package com.pos.entity;
 
+import com.fasterxml.jackson.annotation.JsonManagedReference;
 import com.pos.enums.OrderStatus;
 import com.pos.enums.PaymentMethod;
 import jakarta.persistence.*;
 import lombok.Data;
+
 import java.math.BigDecimal;
 import java.time.LocalDateTime;
 import java.util.ArrayList;
 import java.util.List;
+import java.util.UUID;
 
 @Entity
 @Table(name = "orders")
 @Data
 public class Order {
+
     @Id
     @GeneratedValue(strategy = GenerationType.IDENTITY)
     private Long id;
 
-    @Column(unique = true)
+    @Column(unique = true, nullable = false)
     private String orderNumber;
 
     @ManyToOne
@@ -25,7 +29,9 @@ public class Order {
     private User cashier;
 
     private BigDecimal subtotal;
+
     private BigDecimal tax;
+
     private BigDecimal totalAmount;
 
     @Enumerated(EnumType.STRING)
@@ -34,14 +40,27 @@ public class Order {
     @Enumerated(EnumType.STRING)
     private OrderStatus status = OrderStatus.PENDING;
 
-    @OneToMany(mappedBy = "order", cascade = CascadeType.ALL, fetch = FetchType.LAZY)
+    @OneToMany(
+            mappedBy = "order",
+            cascade = CascadeType.ALL,
+            fetch = FetchType.LAZY
+    )
+    @JsonManagedReference
     private List<OrderItem> items = new ArrayList<>();
 
     private LocalDateTime createdAt;
 
     @PrePersist
     protected void onCreate() {
+
         createdAt = LocalDateTime.now();
-        orderNumber = "ORD" + System.currentTimeMillis();
+
+        // Generate unique order number
+        orderNumber = "ORD-" +
+                UUID.randomUUID()
+                        .toString()
+                        .replace("-", "")
+                        .substring(0, 10)
+                        .toUpperCase();
     }
 }
