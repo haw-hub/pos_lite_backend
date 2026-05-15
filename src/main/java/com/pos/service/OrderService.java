@@ -6,7 +6,6 @@ import com.pos.entity.Order;
 import com.pos.entity.OrderItem;
 import com.pos.entity.Product;
 import com.pos.enums.OrderStatus;
-import com.pos.enums.PaymentMethod;
 import com.pos.repository.OrderRepository;
 import com.pos.repository.ProductRepository;
 import org.springframework.stereotype.Service;
@@ -36,7 +35,12 @@ public class OrderService {
 
         for (OrderRequest.OrderItemRequest itemRequest : request.getItems()) {
             Product product = productRepository.findById(itemRequest.getProductId())
-                    .orElseThrow(() -> new RuntimeException("Product not found"));
+                    .orElseThrow(() -> new RuntimeException("Product not found: " + itemRequest.getProductId()));
+
+            // Check stock
+            if (product.getStock() < itemRequest.getQuantity()) {
+                throw new RuntimeException("Insufficient stock for product: " + product.getName());
+            }
 
             // Update stock
             product.setStock(product.getStock() - itemRequest.getQuantity());
@@ -67,5 +71,15 @@ public class OrderService {
 
     public List<Order> getAllOrders() {
         return orderRepository.findAll();
+    }
+
+    public Order getOrderById(Long id) {
+        return orderRepository.findById(id)
+                .orElseThrow(() -> new RuntimeException("Order not found with id: " + id));
+    }
+
+    public Order getOrderByNumber(String orderNumber) {
+        return orderRepository.findByOrderNumber(orderNumber)
+                .orElseThrow(() -> new RuntimeException("Order not found with number: " + orderNumber));
     }
 }

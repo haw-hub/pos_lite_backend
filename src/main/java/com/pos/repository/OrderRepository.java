@@ -9,33 +9,33 @@ import org.springframework.data.repository.query.Param;
 
 import java.time.LocalDateTime;
 import java.util.List;
+import java.util.Optional;
 
 public interface OrderRepository extends JpaRepository<Order, Long> {
 
-    // Find orders by status
+    // Find by order number
+    Optional<Order> findByOrderNumber(String orderNumber);
+
+    // Find by status
     List<Order> findByStatus(OrderStatus status);
 
-    // Find orders created after specific date (for today's orders)
-    List<Order> findByCreatedAtAfter(LocalDateTime date);
+    // Find by cashier ID
+    List<Order> findByCashierId(Long cashierId);
 
-    // Find orders by order number
-    Order findByOrderNumber(String orderNumber);
+    // Find orders after specific date (for today's orders)
+    List<Order> findByCreatedAtAfter(LocalDateTime date);
 
     // Find orders between dates
     List<Order> findByCreatedAtBetween(LocalDateTime startDate, LocalDateTime endDate);
 
-    // Count orders by status
-    long countByStatus(OrderStatus status);
+    // Find orders by status and date range
+    List<Order> findByStatusAndCreatedAtAfter(OrderStatus status, LocalDateTime date);
 
-    // Get total sales amount for today
+    // Count orders today
+    @Query("SELECT COUNT(o) FROM Order o WHERE DATE(o.createdAt) = CURRENT_DATE")
+    long countTodayOrders();
+
+    // Get total sales for today
     @Query("SELECT COALESCE(SUM(o.totalAmount), 0) FROM Order o WHERE DATE(o.createdAt) = CURRENT_DATE AND o.status = 'COMPLETED'")
     Double getTodaySalesTotal();
-
-    // Get total sales amount for date range
-    @Query("SELECT COALESCE(SUM(o.totalAmount), 0) FROM Order o WHERE o.createdAt BETWEEN :startDate AND :endDate AND o.status = 'COMPLETED'")
-    Double getSalesTotalBetweenDates(@Param("startDate") LocalDateTime startDate, @Param("endDate") LocalDateTime endDate);
-
-    // Get today's order count
-    @Query("SELECT COUNT(o) FROM Order o WHERE DATE(o.createdAt) = CURRENT_DATE")
-    Long getTodayOrderCount();
 }

@@ -8,7 +8,8 @@ public class Application {
 
 	public static void main(String[] args) {
 		SpringApplication.run(Application.class, args);
-        System.out.print("You backend is running successfully!<br>");
+        System.out.println("You backend is running successfully!");
+
 
     }
 

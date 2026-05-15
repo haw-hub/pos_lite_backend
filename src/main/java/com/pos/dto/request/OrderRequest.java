@@ -1,7 +1,8 @@
+// src/main/java/com/pos/dto/request/OrderRequest.java
 package com.pos.dto.request;
 
-import lombok.Data;
 import com.pos.enums.PaymentMethod;
+import lombok.Data;
 import java.util.List;
 
 @Data

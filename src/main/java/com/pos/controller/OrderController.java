@@ -7,6 +7,7 @@ import com.pos.service.OrderService;
 import org.springframework.http.ResponseEntity;
 import org.springframework.security.core.context.SecurityContextHolder;
 import org.springframework.web.bind.annotation.*;
+
 import java.util.List;
 
 @RestController
@@ -22,9 +23,8 @@ public class OrderController {
 
     @PostMapping
     public ResponseEntity<Order> createOrder(@RequestBody OrderRequest request) {
-        // Get current user ID from security context
         String username = SecurityContextHolder.getContext().getAuthentication().getName();
-        Long userId = 1L; // In real app, get from database
+        Long userId = 1L; // Get from database in production
         return ResponseEntity.ok(orderService.createOrder(request, userId));
     }
 
@@ -36,5 +36,15 @@ public class OrderController {
     @GetMapping("/today")
     public ResponseEntity<List<Order>> getTodayOrders() {
         return ResponseEntity.ok(orderService.getTodayOrders());
+    }
+
+    @GetMapping("/{id}")
+    public ResponseEntity<Order> getOrderById(@PathVariable Long id) {
+        return ResponseEntity.ok(orderService.getOrderById(id));
+    }
+
+    @GetMapping("/number/{orderNumber}")
+    public ResponseEntity<Order> getOrderByNumber(@PathVariable String orderNumber) {
+        return ResponseEntity.ok(orderService.getOrderByNumber(orderNumber));
     }
 }
