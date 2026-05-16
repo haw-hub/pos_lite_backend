@@ -1,3 +1,4 @@
+// src/main/java/com/pos/entity/User.java
 package com.pos.entity;
 
 import com.pos.enums.UserRole;
@@ -19,11 +20,17 @@ public class User {
     @Column(nullable = false)
     private String password;
 
-    @Column(columnDefinition = "VARCHAR(255) CHARACTER SET utf8mb4")
+    @Column(name = "full_name", columnDefinition = "VARCHAR(255) CHARACTER SET utf8mb4")
     private String fullName;
 
+    @Column(unique = true)
+    private String email;
+
+    @Column(length = 15)
+    private String phone;
+
     @Enumerated(EnumType.STRING)
-    private UserRole role;
+    private UserRole role = UserRole.ADMIN;
 
     private boolean active = true;
 
@@ -35,4 +42,3 @@ public class User {
         createdAt = LocalDateTime.now();
     }
 }
-
