@@ -2,7 +2,9 @@
 package com.pos.controller;
 
 import com.pos.dto.request.LoginRequest;
+import com.pos.dto.request.SignupRequest;
 import com.pos.dto.response.AuthResponse;
+import com.pos.dto.response.SignupResponse;
 import com.pos.service.AuthService;
 import jakarta.validation.Valid;
 import org.springframework.http.ResponseEntity;
@@ -22,5 +24,10 @@ public class AuthController {
     @PostMapping("/login")
     public ResponseEntity<AuthResponse> login(@Valid @RequestBody LoginRequest request) {
         return ResponseEntity.ok(authService.login(request));
+    }
+
+    @PostMapping("/signup")
+    public ResponseEntity<SignupResponse> signup(@Valid @RequestBody SignupRequest request) {
+        return ResponseEntity.ok(authService.signup(request));
     }
 }
