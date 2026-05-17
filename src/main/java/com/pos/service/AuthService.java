@@ -53,7 +53,7 @@ public class AuthService {
 
         // Load UserDetails for token generation
         UserDetails userDetails = userDetailsService.loadUserByUsername(request.getUsername());
-        String token = jwtUtil.generateToken(String.valueOf(userDetails));
+        String token = jwtUtil.generateToken(userDetails.getUsername());
 
         AuthResponse response = new AuthResponse();
         response.setToken(token);
