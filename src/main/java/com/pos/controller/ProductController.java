@@ -48,9 +48,19 @@ public class ProductController {
         return ResponseEntity.ok(productService.updateProduct(id, product));
     }
 
+    @PutMapping("/{id}/restore")
+    public ResponseEntity<Product> restoreProduct(@PathVariable Long id) {
+        return ResponseEntity.ok(productService.restoreProduct(id));
+    }
+
     @DeleteMapping("/{id}")
     public ResponseEntity<Void> deleteProduct(@PathVariable Long id) {
         productService.deleteProduct(id);
         return ResponseEntity.ok().build();
+    }
+
+    @GetMapping("/deleted")
+    public ResponseEntity<List<Product>> getDeletedProducts() {
+        return ResponseEntity.ok(productService.getDeletedProducts());
     }
 }
