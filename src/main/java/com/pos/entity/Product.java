@@ -2,6 +2,7 @@ package com.pos.entity;
 
 import jakarta.persistence.*;
 import lombok.Data;
+
 import java.math.BigDecimal;
 import java.time.LocalDateTime;
 
@@ -9,6 +10,7 @@ import java.time.LocalDateTime;
 @Table(name = "products")
 @Data
 public class Product {
+
     @Id
     @GeneratedValue(strategy = GenerationType.IDENTITY)
     private Long id;
@@ -29,6 +31,9 @@ public class Product {
 
     private String imageUrl;
 
+    @Column(nullable = false)
+    private Boolean deleted = false;
+
     @Column(name = "created_at")
     private LocalDateTime createdAt;
 
@@ -39,6 +44,7 @@ public class Product {
     protected void onCreate() {
         createdAt = LocalDateTime.now();
         updatedAt = LocalDateTime.now();
+        deleted = false;
     }
 
     @PreUpdate
