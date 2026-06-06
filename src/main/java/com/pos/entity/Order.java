@@ -28,6 +28,10 @@ public class Order {
     @JoinColumn(name = "user_id")
     private User cashier;
 
+    @ManyToOne
+    @JoinColumn(name = "customer_id")
+    private Customer customer;
+
     private BigDecimal subtotal;
 
     private BigDecimal tax;
@@ -45,6 +49,7 @@ public class Order {
             cascade = CascadeType.ALL,
             fetch = FetchType.LAZY
     )
+
     @JsonManagedReference
     private List<OrderItem> items = new ArrayList<>();
 

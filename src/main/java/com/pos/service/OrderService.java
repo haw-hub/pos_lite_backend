@@ -2,12 +2,10 @@
 package com.pos.service;
 
 import com.pos.dto.request.OrderRequest;
-import com.pos.entity.Order;
-import com.pos.entity.OrderItem;
-import com.pos.entity.Product;
+import com.pos.entity.*;
 import com.pos.enums.OrderStatus;
-import com.pos.repository.OrderRepository;
-import com.pos.repository.ProductRepository;
+import com.pos.enums.PaymentMethod;
+import com.pos.repository.*;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 import java.math.BigDecimal;
@@ -19,17 +17,33 @@ public class OrderService {
 
     private final OrderRepository orderRepository;
     private final ProductRepository productRepository;
+    private final UserRepository userRepository;
+    private final CustomerRepository customerRepository;
+    private final DebtRepository debtRepository;
 
-    public OrderService(OrderRepository orderRepository, ProductRepository productRepository) {
+    public OrderService(
+            OrderRepository orderRepository,
+            ProductRepository productRepository,
+            UserRepository userRepository,
+            CustomerRepository customerRepository,
+            DebtRepository debtRepository
+    ) {
         this.orderRepository = orderRepository;
         this.productRepository = productRepository;
+        this.userRepository = userRepository;
+        this.customerRepository = customerRepository;
+        this.debtRepository = debtRepository;
     }
 
     @Transactional
     public Order createOrder(OrderRequest request, Long userId) {
         Order order = new Order();
         order.setPaymentMethod(request.getPaymentMethod());
-        order.setStatus(OrderStatus.COMPLETED);
+        if (request.getPaymentMethod() == PaymentMethod.CREDIT) {
+            order.setStatus(OrderStatus.PENDING);
+        } else {
+            order.setStatus(OrderStatus.COMPLETED);
+        }
 
         BigDecimal subtotal = BigDecimal.ZERO;
 
@@ -61,7 +75,60 @@ public class OrderService {
         order.setTax(BigDecimal.ZERO);
         order.setTotalAmount(subtotal);
 
-        return orderRepository.save(order);
+        if (request.getPaymentMethod() == PaymentMethod.CREDIT) {
+
+            if (request.getCustomerPhone() == null
+                    || request.getCustomerPhone().isBlank()) {
+
+                throw new RuntimeException(
+                        "Customer phone is required"
+                );
+            }
+
+            Customer customer =
+                    customerRepository.findByPhone(
+                            request.getCustomerPhone()
+                    ).orElse(null);
+
+            if (customer == null) {
+
+                customer = new Customer();
+
+                customer.setName(
+                        request.getCustomerName()
+                );
+
+                customer.setPhone(
+                        request.getCustomerPhone()
+                );
+
+                customer =
+                        customerRepository.save(customer);
+            }
+
+            order.setCustomer(customer);
+        }
+
+        Order savedOrder = orderRepository.save(order);
+
+        if (savedOrder.getPaymentMethod() == PaymentMethod.CREDIT) {
+
+            Debt debt = new Debt();
+
+            debt.setCustomer(savedOrder.getCustomer());
+
+            debt.setOrder(savedOrder);
+
+            debt.setTotalAmount(savedOrder.getTotalAmount());
+
+            debt.setPaidAmount(BigDecimal.ZERO);
+
+            debt.setRemainingAmount(savedOrder.getTotalAmount());
+
+            debtRepository.save(debt);
+        }
+
+        return savedOrder;
     }
 
     public List<Order> getTodayOrders() {

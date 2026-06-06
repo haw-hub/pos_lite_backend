@@ -27,6 +27,7 @@ public class JwtFilter extends OncePerRequestFilter {
     // List of public endpoints that don't need JWT
     private static final List<String> PUBLIC_ENDPOINTS = Arrays.asList(
             "/api/auth/login",
+            "/api/auth/signup",
             "/api/auth/register",
             "/api/test/ping",
             "/api/test/connection"
