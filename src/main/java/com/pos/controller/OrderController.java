@@ -24,8 +24,7 @@ public class OrderController {
     @PostMapping
     public ResponseEntity<Order> createOrder(@RequestBody OrderRequest request) {
         String username = SecurityContextHolder.getContext().getAuthentication().getName();
-        Long userId = 1L; // Get from database in production
-        return ResponseEntity.ok(orderService.createOrder(request, userId));
+        return ResponseEntity.ok(orderService.createOrder(request, username));
     }
 
     @GetMapping

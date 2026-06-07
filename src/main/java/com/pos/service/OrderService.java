@@ -5,9 +5,11 @@ import com.pos.dto.request.OrderRequest;
 import com.pos.entity.Order;
 import com.pos.entity.OrderItem;
 import com.pos.entity.Product;
+import com.pos.entity.User;
 import com.pos.enums.OrderStatus;
 import com.pos.repository.OrderRepository;
 import com.pos.repository.ProductRepository;
+import com.pos.repository.UserRepository;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 import java.math.BigDecimal;
@@ -19,15 +21,21 @@ public class OrderService {
 
     private final OrderRepository orderRepository;
     private final ProductRepository productRepository;
+    private final UserRepository userRepository;
 
-    public OrderService(OrderRepository orderRepository, ProductRepository productRepository) {
+    public OrderService(OrderRepository orderRepository, ProductRepository productRepository, UserRepository userRepository) {
         this.orderRepository = orderRepository;
         this.productRepository = productRepository;
+        this.userRepository = userRepository;
     }
 
     @Transactional
-    public Order createOrder(OrderRequest request, Long userId) {
+    public Order createOrder(OrderRequest request, String username) {
+        User cashier = userRepository.findByUsername(username)
+                .orElseThrow(() -> new RuntimeException("User not found: " + username));
+
         Order order = new Order();
+        order.setCashier(cashier);
         order.setPaymentMethod(request.getPaymentMethod());
         order.setStatus(OrderStatus.COMPLETED);
 
