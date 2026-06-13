@@ -59,17 +59,28 @@ public class JwtFilter extends OncePerRequestFilter {
                 username = jwtUtil.extractUsername(jwt);
             } catch (Exception e) {
                 logger.error("JWT extraction error: " + e.getMessage());
+                response.sendError(HttpServletResponse.SC_UNAUTHORIZED, "Invalid or expired token");
+                return;
             }
         }
 
         if (username != null && SecurityContextHolder.getContext().getAuthentication() == null) {
-            UserDetails userDetails = this.userDetailsService.loadUserByUsername(username);
+            try {
+                UserDetails userDetails = this.userDetailsService.loadUserByUsername(username);
 
-            if (jwtUtil.validateToken(jwt, userDetails)) {
-                UsernamePasswordAuthenticationToken authToken = new UsernamePasswordAuthenticationToken(
-                        userDetails, null, userDetails.getAuthorities());
-                authToken.setDetails(new WebAuthenticationDetailsSource().buildDetails(request));
-                SecurityContextHolder.getContext().setAuthentication(authToken);
+                if (jwtUtil.validateToken(jwt, userDetails)) {
+                    UsernamePasswordAuthenticationToken authToken = new UsernamePasswordAuthenticationToken(
+                            userDetails, null, userDetails.getAuthorities());
+                    authToken.setDetails(new WebAuthenticationDetailsSource().buildDetails(request));
+                    SecurityContextHolder.getContext().setAuthentication(authToken);
+                } else {
+                    response.sendError(HttpServletResponse.SC_UNAUTHORIZED, "Invalid or expired token");
+                    return;
+                }
+            } catch (Exception e) {
+                logger.error("JWT authentication error: " + e.getMessage());
+                response.sendError(HttpServletResponse.SC_UNAUTHORIZED, "Invalid authentication");
+                return;
             }
         }
 
