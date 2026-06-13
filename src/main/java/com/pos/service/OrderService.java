@@ -36,8 +36,20 @@ public class OrderService {
     }
 
     @Transactional
-    public Order createOrder(OrderRequest request, Long userId) {
+    public Order createOrder(OrderRequest request, String username) {
+        if (request.getPaymentMethod() == null) {
+            throw new IllegalArgumentException("Payment method is required");
+        }
+
+        if (request.getItems() == null || request.getItems().isEmpty()) {
+            throw new IllegalArgumentException("Order must contain at least one item");
+        }
+
+        User cashier = userRepository.findByUsername(username)
+                .orElseThrow(() -> new RuntimeException("User not found: " + username));
+
         Order order = new Order();
+        order.setCashier(cashier);
         order.setPaymentMethod(request.getPaymentMethod());
         if (request.getPaymentMethod() == PaymentMethod.CREDIT) {
             order.setStatus(OrderStatus.PENDING);
@@ -48,6 +60,12 @@ public class OrderService {
         BigDecimal subtotal = BigDecimal.ZERO;
 
         for (OrderRequest.OrderItemRequest itemRequest : request.getItems()) {
+            if (itemRequest.getProductId() == null
+                    || itemRequest.getQuantity() == null
+                    || itemRequest.getQuantity() <= 0) {
+                throw new IllegalArgumentException("Each order item must have a product and positive quantity");
+            }
+
             Product product = productRepository.findById(itemRequest.getProductId())
                     .orElseThrow(() -> new RuntimeException("Product not found: " + itemRequest.getProductId()));
 
@@ -83,6 +101,11 @@ public class OrderService {
                 throw new RuntimeException(
                         "Customer phone is required"
                 );
+            }
+
+            if (request.getCustomerName() == null
+                    || request.getCustomerName().isBlank()) {
+                throw new RuntimeException("Customer name is required");
             }
 
             Customer customer =

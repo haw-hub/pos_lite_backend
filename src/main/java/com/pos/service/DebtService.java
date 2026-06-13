@@ -58,6 +58,20 @@ public class DebtService {
                 .findById(debtId)
                 .orElseThrow();
 
+        if (request.getAmount() == null
+                || request.getAmount().compareTo(BigDecimal.ZERO) <= 0) {
+            throw new IllegalArgumentException("Payment amount must be greater than zero");
+        }
+
+        if (request.getPaymentMethod() == null
+                || request.getPaymentMethod() == com.pos.enums.PaymentMethod.CREDIT) {
+            throw new IllegalArgumentException("A valid payment method is required");
+        }
+
+        if (request.getAmount().compareTo(debt.getRemainingAmount()) > 0) {
+            throw new IllegalArgumentException("Payment amount cannot exceed remaining debt");
+        }
+
         DebtPayment payment =
                 new DebtPayment();
 

@@ -1,6 +1,9 @@
 HELP.md
 target/
 .env
+backend-*.log
+hs_err_pid*.log
+replay_pid*.log
 .mvn/wrapper/maven-wrapper.jar
 !**/src/main/**/target/
 !**/src/test/**/target/

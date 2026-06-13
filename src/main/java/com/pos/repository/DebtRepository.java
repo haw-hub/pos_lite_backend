@@ -22,6 +22,7 @@ public interface DebtRepository
         )
         FROM Debt d
         JOIN d.customer c
+        WHERE d.remainingAmount > 0
         GROUP BY c.id, c.name, c.phone
     """)
     List<CustomerDebtSummaryDTO> getCustomerDebtSummary();
