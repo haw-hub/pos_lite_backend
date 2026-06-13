@@ -1,6 +1,7 @@
 // src/main/java/com/pos/entity/User.java
 package com.pos.entity;
 
+import com.fasterxml.jackson.annotation.JsonIgnore;
 import com.pos.enums.UserRole;
 import jakarta.persistence.*;
 import lombok.Data;
@@ -18,6 +19,7 @@ public class User {
     private String username;
 
     @Column(nullable = false)
+    @JsonIgnore
     private String password;
 
     @Column(name = "full_name", columnDefinition = "VARCHAR(255) CHARACTER SET utf8mb4")
