@@ -25,10 +25,10 @@ public class DebtService {
         this.debtPaymentRepository = debtPaymentRepository;
     }
     @Transactional
-    public Debt markPaid(Long debtId) {
+    public Debt markPaid(Long debtId, String username) {
 
         Debt debt = debtRepository
-                .findById(debtId)
+                .findByIdAndOrderCashierUsername(debtId, username)
                 .orElseThrow();
 
         debt.setPaidAmount(
@@ -51,11 +51,12 @@ public class DebtService {
     @Transactional
     public Debt makePayment(
             Long debtId,
-            DebtPaymentRequest request
+            DebtPaymentRequest request,
+            String username
     ) {
 
         Debt debt = debtRepository
-                .findById(debtId)
+                .findByIdAndOrderCashierUsername(debtId, username)
                 .orElseThrow();
 
         if (request.getAmount() == null

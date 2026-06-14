@@ -14,6 +14,7 @@ import com.pos.repository.DebtPaymentRepository;
 
 import java.math.BigDecimal;
 import java.util.List;
+import org.springframework.security.core.context.SecurityContextHolder;
 
 @RestController
 @RequestMapping("/api/debts")
@@ -36,26 +37,26 @@ public class DebtController {
 
     @GetMapping
     public List<Debt> getAll() {
-        return debtRepository.findAll();
+        return debtRepository.findByOrderCashierUsername(username());
     }
 
     @GetMapping("/summary")
     public List<CustomerDebtSummaryDTO> summary() {
-        return debtRepository.getCustomerDebtSummary();
+        return debtRepository.getCustomerDebtSummary(username());
     }
 
     @GetMapping("/customer/{customerId}")
     public List<Debt> getCustomerDebts(
             @PathVariable Long customerId
     ) {
-        return debtRepository.findByCustomerId(customerId);
+        return debtRepository.findByCustomerIdAndOrderCashierUsername(customerId, username());
     }
 
     @PutMapping("/{debtId}/paid")
     public Debt markPaid(
             @PathVariable Long debtId
     ) {
-        return debtService.markPaid(debtId);
+        return debtService.markPaid(debtId, username());
     }
 
     @PostMapping("/{debtId}/payments")
@@ -65,7 +66,11 @@ public class DebtController {
     ) {
         return debtService.makePayment(
                 debtId,
-                request
+                request, username()
         );
+    }
+
+    private String username() {
+        return SecurityContextHolder.getContext().getAuthentication().getName();
     }
 }

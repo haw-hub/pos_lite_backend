@@ -21,6 +21,9 @@ public class Order {
     @GeneratedValue(strategy = GenerationType.IDENTITY)
     private Long id;
 
+    @Column(unique = true)
+    private String clientReference;
+
     @Column(unique = true, nullable = false)
     private String orderNumber;
 

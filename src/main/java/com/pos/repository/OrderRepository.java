@@ -15,6 +15,9 @@ public interface OrderRepository extends JpaRepository<Order, Long> {
 
     // Find by order number
     Optional<Order> findByOrderNumber(String orderNumber);
+    Optional<Order> findByIdAndCashierUsername(Long id, String username);
+    Optional<Order> findByOrderNumberAndCashierUsername(String orderNumber, String username);
+    Optional<Order> findByCashierUsernameAndClientReference(String username, String clientReference);
 
     // Find by status
     List<Order> findByStatus(OrderStatus status);
@@ -24,6 +27,8 @@ public interface OrderRepository extends JpaRepository<Order, Long> {
 
     // Find orders after specific date (for today's orders)
     List<Order> findByCreatedAtAfter(LocalDateTime date);
+    List<Order> findByCashierUsername(String username);
+    List<Order> findByCashierUsernameAndCreatedAtAfter(String username, LocalDateTime date);
 
     // Find orders between dates
     List<Order> findByCreatedAtBetween(LocalDateTime startDate, LocalDateTime endDate);

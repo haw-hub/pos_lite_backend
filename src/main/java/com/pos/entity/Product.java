@@ -2,9 +2,11 @@ package com.pos.entity;
 
 import jakarta.persistence.*;
 import lombok.Data;
+import com.fasterxml.jackson.annotation.JsonIgnore;
 
 import java.math.BigDecimal;
 import java.time.LocalDateTime;
+import java.time.LocalDate;
 
 @Entity
 @Table(name = "products")
@@ -14,6 +16,14 @@ public class Product {
     @Id
     @GeneratedValue(strategy = GenerationType.IDENTITY)
     private Long id;
+
+    @JsonIgnore
+    @ManyToOne
+    @JoinColumn(name = "owner_id")
+    private User owner;
+
+    @Column(unique = true)
+    private String clientReference;
 
     @Column(nullable = false, columnDefinition = "VARCHAR(255) CHARACTER SET utf8mb4")
     private String name;
@@ -30,6 +40,8 @@ public class Product {
     private String barcode;
 
     private String imageUrl;
+
+    private LocalDate expiryDate;
 
     @Column(nullable = false)
     private Boolean deleted = false;

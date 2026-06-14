@@ -10,6 +10,7 @@ import java.util.List;
 
 @Data
 public class OrderRequest {
+    private String clientReference;
     private List<OrderItemRequest> items;
     private PaymentMethod paymentMethod;
 

@@ -10,6 +10,7 @@ import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 import java.math.BigDecimal;
 import java.time.LocalDateTime;
+import java.time.LocalDate;
 import java.util.List;
 
 @Service
@@ -37,6 +38,13 @@ public class OrderService {
 
     @Transactional
     public Order createOrder(OrderRequest request, String username) {
+        if (request.getClientReference() != null && !request.getClientReference().isBlank()) {
+            Order existing = orderRepository.findByCashierUsernameAndClientReference(username, request.getClientReference()).orElse(null);
+            if (existing != null) {
+                return existing;
+            }
+        }
+
         if (request.getPaymentMethod() == null) {
             throw new IllegalArgumentException("Payment method is required");
         }
@@ -49,6 +57,7 @@ public class OrderService {
                 .orElseThrow(() -> new RuntimeException("User not found: " + username));
 
         Order order = new Order();
+        order.setClientReference(request.getClientReference());
         order.setCashier(cashier);
         order.setPaymentMethod(request.getPaymentMethod());
         if (request.getPaymentMethod() == PaymentMethod.CREDIT) {
@@ -66,8 +75,12 @@ public class OrderService {
                 throw new IllegalArgumentException("Each order item must have a product and positive quantity");
             }
 
-            Product product = productRepository.findById(itemRequest.getProductId())
+            Product product = productRepository.findByIdAndOwnerUsernameAndDeletedFalse(itemRequest.getProductId(), username)
                     .orElseThrow(() -> new RuntimeException("Product not found: " + itemRequest.getProductId()));
+
+            if (product.getExpiryDate() != null && product.getExpiryDate().isBefore(LocalDate.now())) {
+                throw new RuntimeException("Product has expired: " + product.getName());
+            }
 
             // Check stock
             if (product.getStock() < itemRequest.getQuantity()) {
@@ -109,13 +122,14 @@ public class OrderService {
             }
 
             Customer customer =
-                    customerRepository.findByPhone(
-                            request.getCustomerPhone()
+                    customerRepository.findByOwnerUsernameAndPhone(
+                            username, request.getCustomerPhone()
                     ).orElse(null);
 
             if (customer == null) {
 
                 customer = new Customer();
+                customer.setOwner(cashier);
 
                 customer.setName(
                         request.getCustomerName()
@@ -154,22 +168,22 @@ public class OrderService {
         return savedOrder;
     }
 
-    public List<Order> getTodayOrders() {
+    public List<Order> getTodayOrders(String username) {
         LocalDateTime startOfDay = LocalDateTime.now().withHour(0).withMinute(0).withSecond(0);
-        return orderRepository.findByCreatedAtAfter(startOfDay);
+        return orderRepository.findByCashierUsernameAndCreatedAtAfter(username, startOfDay);
     }
 
-    public List<Order> getAllOrders() {
-        return orderRepository.findAll();
+    public List<Order> getAllOrders(String username) {
+        return orderRepository.findByCashierUsername(username);
     }
 
-    public Order getOrderById(Long id) {
-        return orderRepository.findById(id)
+    public Order getOrderById(Long id, String username) {
+        return orderRepository.findByIdAndCashierUsername(id, username)
                 .orElseThrow(() -> new RuntimeException("Order not found with id: " + id));
     }
 
-    public Order getOrderByNumber(String orderNumber) {
-        return orderRepository.findByOrderNumber(orderNumber)
+    public Order getOrderByNumber(String orderNumber, String username) {
+        return orderRepository.findByOrderNumberAndCashierUsername(orderNumber, username)
                 .orElseThrow(() -> new RuntimeException("Order not found with number: " + orderNumber));
     }
 }

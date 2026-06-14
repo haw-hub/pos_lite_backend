@@ -29,21 +29,25 @@ public class OrderController {
 
     @GetMapping
     public ResponseEntity<List<Order>> getAllOrders() {
-        return ResponseEntity.ok(orderService.getAllOrders());
+        return ResponseEntity.ok(orderService.getAllOrders(username()));
     }
 
     @GetMapping("/today")
     public ResponseEntity<List<Order>> getTodayOrders() {
-        return ResponseEntity.ok(orderService.getTodayOrders());
+        return ResponseEntity.ok(orderService.getTodayOrders(username()));
     }
 
     @GetMapping("/{id}")
     public ResponseEntity<Order> getOrderById(@PathVariable Long id) {
-        return ResponseEntity.ok(orderService.getOrderById(id));
+        return ResponseEntity.ok(orderService.getOrderById(id, username()));
     }
 
     @GetMapping("/number/{orderNumber}")
     public ResponseEntity<Order> getOrderByNumber(@PathVariable String orderNumber) {
-        return ResponseEntity.ok(orderService.getOrderByNumber(orderNumber));
+        return ResponseEntity.ok(orderService.getOrderByNumber(orderNumber, username()));
+    }
+
+    private String username() {
+        return SecurityContextHolder.getContext().getAuthentication().getName();
     }
 }
