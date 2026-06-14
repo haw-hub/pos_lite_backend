@@ -34,6 +34,9 @@ public class Product {
     @Column(nullable = false)
     private BigDecimal price;
 
+    @Column(nullable = false, columnDefinition = "DECIMAL(19,2) DEFAULT 0")
+    private BigDecimal costPrice = BigDecimal.ZERO;
+
     @Column(nullable = false)
     private Integer stock = 0;
 

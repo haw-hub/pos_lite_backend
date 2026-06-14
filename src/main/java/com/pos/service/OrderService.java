@@ -67,6 +67,7 @@ public class OrderService {
         }
 
         BigDecimal subtotal = BigDecimal.ZERO;
+        BigDecimal totalProfit = BigDecimal.ZERO;
 
         for (OrderRequest.OrderItemRequest itemRequest : request.getItems()) {
             if (itemRequest.getProductId() == null
@@ -82,6 +83,11 @@ public class OrderService {
                 throw new RuntimeException("Product has expired: " + product.getName());
             }
 
+            if (product.getCostPrice() == null
+                    || product.getCostPrice().compareTo(BigDecimal.ZERO) <= 0) {
+                throw new RuntimeException("Cost price is required for product: " + product.getName());
+            }
+
             // Check stock
             if (product.getStock() < itemRequest.getQuantity()) {
                 throw new RuntimeException("Insufficient stock for product: " + product.getName());
@@ -95,16 +101,24 @@ public class OrderService {
             item.setProduct(product);
             item.setQuantity(itemRequest.getQuantity());
             item.setUnitPrice(product.getPrice());
+            item.setUnitCost(product.getCostPrice() == null ? BigDecimal.ZERO : product.getCostPrice());
             item.setTotalPrice(product.getPrice().multiply(BigDecimal.valueOf(itemRequest.getQuantity())));
+            item.setProfit(
+                    item.getUnitPrice()
+                            .subtract(item.getUnitCost())
+                            .multiply(BigDecimal.valueOf(itemRequest.getQuantity()))
+            );
             item.setOrder(order);
 
             order.getItems().add(item);
             subtotal = subtotal.add(item.getTotalPrice());
+            totalProfit = totalProfit.add(item.getProfit());
         }
 
         order.setSubtotal(subtotal);
         order.setTax(BigDecimal.ZERO);
         order.setTotalAmount(subtotal);
+        order.setTotalProfit(totalProfit);
 
         if (request.getPaymentMethod() == PaymentMethod.CREDIT) {
 

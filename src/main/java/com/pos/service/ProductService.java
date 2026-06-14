@@ -7,6 +7,7 @@ import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 
 import java.util.List;
+import java.math.BigDecimal;
 
 @Service
 public class ProductService {
@@ -38,6 +39,7 @@ public class ProductService {
         product.setId(null);
         product.setOwner(userRepository.findByUsername(username)
                 .orElseThrow(() -> new RuntimeException("User not found")));
+        validateCostPrice(product);
         product.setDeleted(false);
         return productRepository.save(product);
     }
@@ -45,9 +47,11 @@ public class ProductService {
     @Transactional
     public Product updateProduct(Long id, Product productDetails, String username) {
         Product product = getProductById(id, username);
+        validateCostPrice(productDetails);
         product.setName(productDetails.getName());
         product.setDescription(productDetails.getDescription());
         product.setPrice(productDetails.getPrice());
+        product.setCostPrice(productDetails.getCostPrice());
         product.setStock(productDetails.getStock());
         product.setBarcode(productDetails.getBarcode());
         product.setImageUrl(productDetails.getImageUrl());
@@ -93,5 +97,12 @@ public class ProductService {
 
     public List<Product> getDeletedProducts(String username) {
         return productRepository.findByOwnerUsernameAndDeletedTrue(username);
+    }
+
+    private void validateCostPrice(Product product) {
+        if (product.getCostPrice() == null
+                || product.getCostPrice().compareTo(BigDecimal.ZERO) <= 0) {
+            throw new IllegalArgumentException("Cost price must be greater than zero");
+        }
     }
 }
