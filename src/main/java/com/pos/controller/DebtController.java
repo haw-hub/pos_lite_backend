@@ -15,6 +15,7 @@ import com.pos.repository.DebtPaymentRepository;
 import java.math.BigDecimal;
 import java.util.List;
 import org.springframework.security.core.context.SecurityContextHolder;
+import com.pos.service.CurrentUserService;
 
 @RestController
 @RequestMapping("/api/debts")
@@ -23,33 +24,36 @@ public class DebtController {
     private final DebtRepository debtRepository;
     private final DebtService debtService;
     private final DebtPaymentRepository debtPaymentRepository;
+    private final CurrentUserService currentUserService;
 
     public DebtController(
             DebtRepository debtRepository,
             DebtService debtService,
-            DebtPaymentRepository debtPaymentRepository
+            DebtPaymentRepository debtPaymentRepository,
+            CurrentUserService currentUserService
     ) {
         this.debtRepository = debtRepository;
         this.debtService = debtService;
         this.debtPaymentRepository = debtPaymentRepository;
+        this.currentUserService = currentUserService;
     }
 
 
     @GetMapping
     public List<Debt> getAll() {
-        return debtRepository.findByOrderCashierUsername(username());
+        return debtRepository.findByOrderShopId(shopId());
     }
 
     @GetMapping("/summary")
     public List<CustomerDebtSummaryDTO> summary() {
-        return debtRepository.getCustomerDebtSummary(username());
+        return debtRepository.getCustomerDebtSummary(shopId());
     }
 
     @GetMapping("/customer/{customerId}")
     public List<Debt> getCustomerDebts(
             @PathVariable Long customerId
     ) {
-        return debtRepository.findByCustomerIdAndOrderCashierUsername(customerId, username());
+        return debtRepository.findByCustomerIdAndOrderShopId(customerId, shopId());
     }
 
     @PutMapping("/{debtId}/paid")
@@ -72,5 +76,9 @@ public class DebtController {
 
     private String username() {
         return SecurityContextHolder.getContext().getAuthentication().getName();
+    }
+
+    private Long shopId() {
+        return currentUserService.require(username()).getShop().getId();
     }
 }

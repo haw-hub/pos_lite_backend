@@ -31,6 +31,10 @@ public class User {
     @Column(length = 15)
     private String phone;
 
+    @ManyToOne
+    @JoinColumn(name = "shop_id")
+    private Shop shop;
+
     @Enumerated(EnumType.STRING)
     private UserRole role = UserRole.ADMIN;
 

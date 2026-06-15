@@ -10,9 +10,9 @@ import java.util.List;
 public interface DebtRepository
         extends JpaRepository<Debt, Long> {
 
-    List<Debt> findByCustomerIdAndOrderCashierUsername(Long customerId, String username);
-    List<Debt> findByOrderCashierUsername(String username);
-    java.util.Optional<Debt> findByIdAndOrderCashierUsername(Long id, String username);
+    List<Debt> findByCustomerIdAndOrderShopId(Long customerId, Long shopId);
+    List<Debt> findByOrderShopId(Long shopId);
+    java.util.Optional<Debt> findByIdAndOrderShopId(Long id, Long shopId);
 
     @Query("""
         SELECT new com.pos.dto.CustomerDebtSummaryDTO(
@@ -25,8 +25,8 @@ public interface DebtRepository
         FROM Debt d
         JOIN d.customer c
         WHERE d.remainingAmount > 0
-        AND d.order.cashier.username = :username
+        AND d.order.shop.id = :shopId
         GROUP BY c.id, c.name, c.phone
     """)
-    List<CustomerDebtSummaryDTO> getCustomerDebtSummary(String username);
+    List<CustomerDebtSummaryDTO> getCustomerDebtSummary(Long shopId);
 }

@@ -21,25 +21,30 @@ public class OrderService {
     private final UserRepository userRepository;
     private final CustomerRepository customerRepository;
     private final DebtRepository debtRepository;
+    private final CurrentUserService currentUserService;
 
     public OrderService(
             OrderRepository orderRepository,
             ProductRepository productRepository,
             UserRepository userRepository,
             CustomerRepository customerRepository,
-            DebtRepository debtRepository
+            DebtRepository debtRepository,
+            CurrentUserService currentUserService
     ) {
         this.orderRepository = orderRepository;
         this.productRepository = productRepository;
         this.userRepository = userRepository;
         this.customerRepository = customerRepository;
         this.debtRepository = debtRepository;
+        this.currentUserService = currentUserService;
     }
 
     @Transactional
     public Order createOrder(OrderRequest request, String username) {
+        User cashier = currentUserService.require(username);
+        Long shopId = cashier.getShop().getId();
         if (request.getClientReference() != null && !request.getClientReference().isBlank()) {
-            Order existing = orderRepository.findByCashierUsernameAndClientReference(username, request.getClientReference()).orElse(null);
+            Order existing = orderRepository.findByShopIdAndClientReference(shopId, request.getClientReference()).orElse(null);
             if (existing != null) {
                 return existing;
             }
@@ -53,12 +58,10 @@ public class OrderService {
             throw new IllegalArgumentException("Order must contain at least one item");
         }
 
-        User cashier = userRepository.findByUsername(username)
-                .orElseThrow(() -> new RuntimeException("User not found: " + username));
-
         Order order = new Order();
         order.setClientReference(request.getClientReference());
         order.setCashier(cashier);
+        order.setShop(cashier.getShop());
         order.setPaymentMethod(request.getPaymentMethod());
         if (request.getPaymentMethod() == PaymentMethod.CREDIT) {
             order.setStatus(OrderStatus.PENDING);
@@ -76,7 +79,7 @@ public class OrderService {
                 throw new IllegalArgumentException("Each order item must have a product and positive quantity");
             }
 
-            Product product = productRepository.findByIdAndOwnerUsernameAndDeletedFalse(itemRequest.getProductId(), username)
+            Product product = productRepository.findByIdAndShopIdAndDeletedFalse(itemRequest.getProductId(), shopId)
                     .orElseThrow(() -> new RuntimeException("Product not found: " + itemRequest.getProductId()));
 
             if (product.getExpiryDate() != null && product.getExpiryDate().isBefore(LocalDate.now())) {
@@ -136,14 +139,15 @@ public class OrderService {
             }
 
             Customer customer =
-                    customerRepository.findByOwnerUsernameAndPhone(
-                            username, request.getCustomerPhone()
+                    customerRepository.findByShopIdAndPhone(
+                            shopId, request.getCustomerPhone()
                     ).orElse(null);
 
             if (customer == null) {
 
                 customer = new Customer();
                 customer.setOwner(cashier);
+                customer.setShop(cashier.getShop());
 
                 customer.setName(
                         request.getCustomerName()
@@ -184,20 +188,24 @@ public class OrderService {
 
     public List<Order> getTodayOrders(String username) {
         LocalDateTime startOfDay = LocalDateTime.now().withHour(0).withMinute(0).withSecond(0);
-        return orderRepository.findByCashierUsernameAndCreatedAtAfter(username, startOfDay);
+        return orderRepository.findByShopIdAndCreatedAtAfter(shopId(username), startOfDay);
     }
 
     public List<Order> getAllOrders(String username) {
-        return orderRepository.findByCashierUsername(username);
+        return orderRepository.findByShopId(shopId(username));
     }
 
     public Order getOrderById(Long id, String username) {
-        return orderRepository.findByIdAndCashierUsername(id, username)
+        return orderRepository.findByIdAndShopId(id, shopId(username))
                 .orElseThrow(() -> new RuntimeException("Order not found with id: " + id));
     }
 
     public Order getOrderByNumber(String orderNumber, String username) {
-        return orderRepository.findByOrderNumberAndCashierUsername(orderNumber, username)
+        return orderRepository.findByOrderNumberAndShopId(orderNumber, shopId(username))
                 .orElseThrow(() -> new RuntimeException("Order not found with number: " + orderNumber));
+    }
+
+    private Long shopId(String username) {
+        return currentUserService.require(username).getShop().getId();
     }
 }

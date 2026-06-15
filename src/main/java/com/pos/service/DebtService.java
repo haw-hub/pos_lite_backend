@@ -16,19 +16,22 @@ public class DebtService {
 
     private final DebtRepository debtRepository;
     private final DebtPaymentRepository debtPaymentRepository;
+    private final CurrentUserService currentUserService;
 
     public DebtService(
             DebtRepository debtRepository,
-            DebtPaymentRepository debtPaymentRepository
+            DebtPaymentRepository debtPaymentRepository,
+            CurrentUserService currentUserService
     ) {
         this.debtRepository = debtRepository;
         this.debtPaymentRepository = debtPaymentRepository;
+        this.currentUserService = currentUserService;
     }
     @Transactional
     public Debt markPaid(Long debtId, String username) {
 
         Debt debt = debtRepository
-                .findByIdAndOrderCashierUsername(debtId, username)
+                .findByIdAndOrderShopId(debtId, shopId(username))
                 .orElseThrow();
 
         debt.setPaidAmount(
@@ -56,7 +59,7 @@ public class DebtService {
     ) {
 
         Debt debt = debtRepository
-                .findByIdAndOrderCashierUsername(debtId, username)
+                .findByIdAndOrderShopId(debtId, shopId(username))
                 .orElseThrow();
 
         if (request.getAmount() == null
@@ -85,6 +88,7 @@ public class DebtService {
         payment.setPaymentMethod(
                 request.getPaymentMethod()
         );
+        payment.setReceivedBy(currentUserService.require(username));
 
         debtPaymentRepository.save(payment);
 
@@ -115,5 +119,9 @@ public class DebtService {
         }
 
         return debtRepository.save(debt);
+    }
+
+    private Long shopId(String username) {
+        return currentUserService.require(username).getShop().getId();
     }
 }

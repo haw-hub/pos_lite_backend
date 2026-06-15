@@ -30,7 +30,11 @@ public class CustomUserDetailsService implements UserDetailsService {
         return new org.springframework.security.core.userdetails.User(
                 user.getUsername(),
                 user.getPassword(),
-                Collections.singletonList(authority)  // Add authorities
+                user.isActive() && user.getShop() != null && user.getShop().isActive(),
+                true,
+                true,
+                true,
+                Collections.singletonList(authority)
         );
     }
 }

@@ -10,6 +10,8 @@ import org.springframework.stereotype.Component;
 import java.security.Key;
 import java.util.Date;
 import java.util.function.Function;
+import java.util.Map;
+import com.pos.entity.User;
 
 @Component
 public class JwtUtil {
@@ -49,6 +51,20 @@ public class JwtUtil {
     public String generateToken(String username) {
         return Jwts.builder()
                 .setSubject(String.valueOf(username))
+                .setIssuedAt(new Date())
+                .setExpiration(new Date(System.currentTimeMillis() + expiration))
+                .signWith(getSigningKey(), SignatureAlgorithm.HS256)
+                .compact();
+    }
+
+    public String generateToken(User user) {
+        return Jwts.builder()
+                .setClaims(Map.of(
+                        "userId", user.getId(),
+                        "shopId", user.getShop().getId(),
+                        "role", user.getRole().name()
+                ))
+                .setSubject(user.getUsername())
                 .setIssuedAt(new Date())
                 .setExpiration(new Date(System.currentTimeMillis() + expiration))
                 .signWith(getSigningKey(), SignatureAlgorithm.HS256)

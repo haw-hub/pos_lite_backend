@@ -22,6 +22,11 @@ public class Product {
     @JoinColumn(name = "owner_id")
     private User owner;
 
+    @JsonIgnore
+    @ManyToOne
+    @JoinColumn(name = "shop_id")
+    private Shop shop;
+
     @Column(unique = true)
     private String clientReference;
 

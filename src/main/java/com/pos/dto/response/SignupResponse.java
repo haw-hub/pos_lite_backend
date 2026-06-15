@@ -11,5 +11,7 @@ public class SignupResponse {
     private String email;
     private String phone;
     private String role;
+    private Long shopId;
+    private String shopName;
     private String message;
 }

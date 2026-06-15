@@ -6,7 +6,7 @@ import com.fasterxml.jackson.annotation.JsonIgnore;
 
 @Entity
 @Table(name = "customers", uniqueConstraints = {
-        @UniqueConstraint(columnNames = {"owner_id", "phone"})
+        @UniqueConstraint(columnNames = {"shop_id", "phone"})
 })
 @Data
 public class Customer {
@@ -19,6 +19,11 @@ public class Customer {
     @ManyToOne
     @JoinColumn(name = "owner_id")
     private User owner;
+
+    @JsonIgnore
+    @ManyToOne
+    @JoinColumn(name = "shop_id")
+    private Shop shop;
 
     private String name;
 

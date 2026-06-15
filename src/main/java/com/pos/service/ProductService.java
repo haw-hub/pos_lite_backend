@@ -13,32 +13,33 @@ import java.math.BigDecimal;
 public class ProductService {
 
     private final ProductRepository productRepository;
-    private final UserRepository userRepository;
+    private final CurrentUserService currentUserService;
 
-    public ProductService(ProductRepository productRepository, UserRepository userRepository) {
+    public ProductService(ProductRepository productRepository, CurrentUserService currentUserService) {
         this.productRepository = productRepository;
-        this.userRepository = userRepository;
+        this.currentUserService = currentUserService;
     }
 
     public List<Product> getAllProducts(String username) {
-        return productRepository.findByOwnerUsernameAndDeletedFalse(username);
+        return productRepository.findByShopIdAndDeletedFalse(shopId(username));
     }
 
     public Product getProductById(Long id, String username) {
-        return productRepository.findByIdAndOwnerUsernameAndDeletedFalse(id, username)
+        return productRepository.findByIdAndShopIdAndDeletedFalse(id, shopId(username))
                 .orElseThrow(() -> new RuntimeException("Product not found"));
     }
 
     public Product createProduct(Product product, String username) {
+        var user = currentUserService.require(username);
         if (product.getClientReference() != null && !product.getClientReference().isBlank()) {
-            Product existing = productRepository.findByOwnerUsernameAndClientReference(username, product.getClientReference()).orElse(null);
+            Product existing = productRepository.findByShopIdAndClientReference(user.getShop().getId(), product.getClientReference()).orElse(null);
             if (existing != null) {
                 return existing;
             }
         }
         product.setId(null);
-        product.setOwner(userRepository.findByUsername(username)
-                .orElseThrow(() -> new RuntimeException("User not found")));
+        product.setOwner(user);
+        product.setShop(user.getShop());
         validateCostPrice(product);
         product.setDeleted(false);
         return productRepository.save(product);
@@ -61,7 +62,7 @@ public class ProductService {
 
     @Transactional
     public void deleteProduct(Long id, String username) {
-        Product product = productRepository.findByIdAndOwnerUsername(id, username)
+        Product product = productRepository.findByIdAndShopId(id, shopId(username))
                 .orElseThrow(() -> new RuntimeException("Product not found"));
 
         if (Boolean.TRUE.equals(product.getDeleted())) {
@@ -74,17 +75,17 @@ public class ProductService {
 
     public List<Product> searchProducts(String query, String username) {
         return productRepository
-                .findByOwnerUsernameAndNameContainingIgnoreCaseAndDeletedFalse(username, query);
+                .findByShopIdAndNameContainingIgnoreCaseAndDeletedFalse(shopId(username), query);
     }
 
     public List<Product> getLowStockProducts(String username) {
-        return productRepository.findLowStockProducts(10, username);
+        return productRepository.findLowStockProducts(10, shopId(username));
     }
 
     @Transactional
     public Product restoreProduct(Long id, String username) {
 
-        Product product = productRepository.findByIdAndOwnerUsername(id, username)
+        Product product = productRepository.findByIdAndShopId(id, shopId(username))
                 .orElseThrow(() -> new RuntimeException("Product not found"));
 
         if (!Boolean.TRUE.equals(product.getDeleted())) {
@@ -96,7 +97,11 @@ public class ProductService {
     }
 
     public List<Product> getDeletedProducts(String username) {
-        return productRepository.findByOwnerUsernameAndDeletedTrue(username);
+        return productRepository.findByShopIdAndDeletedTrue(shopId(username));
+    }
+
+    private Long shopId(String username) {
+        return currentUserService.require(username).getShop().getId();
     }
 
     private void validateCostPrice(Product product) {

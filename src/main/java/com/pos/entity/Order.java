@@ -32,6 +32,10 @@ public class Order {
     private User cashier;
 
     @ManyToOne
+    @JoinColumn(name = "shop_id")
+    private Shop shop;
+
+    @ManyToOne
     @JoinColumn(name = "customer_id")
     private Customer customer;
 

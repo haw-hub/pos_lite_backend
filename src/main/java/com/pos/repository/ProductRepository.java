@@ -9,24 +9,24 @@ import java.util.Optional;
 
 public interface ProductRepository extends JpaRepository<Product, Long> {
 
-    List<Product> findByOwnerUsernameAndDeletedFalse(String username);
+    List<Product> findByShopIdAndDeletedFalse(Long shopId);
 
-    Optional<Product> findByIdAndOwnerUsernameAndDeletedFalse(Long id, String username);
+    Optional<Product> findByIdAndShopIdAndDeletedFalse(Long id, Long shopId);
 
-    List<Product> findByOwnerUsernameAndNameContainingIgnoreCaseAndDeletedFalse(String username, String name);
+    List<Product> findByShopIdAndNameContainingIgnoreCaseAndDeletedFalse(Long shopId, String name);
 
     @Query("""
            SELECT p
            FROM Product p
            WHERE p.stock < :threshold
-           AND p.owner.username = :username
+           AND p.shop.id = :shopId
            AND p.deleted = false
            """)
-    List<Product> findLowStockProducts(int threshold, String username);
+    List<Product> findLowStockProducts(int threshold, Long shopId);
 
-    List<Product> findByOwnerUsernameAndDeletedTrue(String username);
+    List<Product> findByShopIdAndDeletedTrue(Long shopId);
 
-    Optional<Product> findByIdAndOwnerUsername(Long id, String username);
-    Optional<Product> findByOwnerUsernameAndClientReference(String username, String clientReference);
+    Optional<Product> findByIdAndShopId(Long id, Long shopId);
+    Optional<Product> findByShopIdAndClientReference(Long shopId, String clientReference);
 
 }

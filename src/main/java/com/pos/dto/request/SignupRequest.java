@@ -25,4 +25,7 @@ public class SignupRequest {
 
     @Pattern(regexp = "^[0-9]{7,15}$", message = "Phone number must be 7-15 digits")
     private String phone;
+
+    @Size(max = 255)
+    private String shopName;
 }
