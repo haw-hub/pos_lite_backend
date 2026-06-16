@@ -25,14 +25,16 @@ public class DataInitializer implements CommandLineRunner {
     private final CustomerRepository customerRepository;
     private final OrderRepository orderRepository;
     private final ShopRepository shopRepository;
+    private final com.pos.service.SubscriptionService subscriptionService;
 
-    public DataInitializer(UserRepository userRepository, ProductRepository productRepository, PasswordEncoder passwordEncoder, CustomerRepository customerRepository, OrderRepository orderRepository, ShopRepository shopRepository) {
+    public DataInitializer(UserRepository userRepository, ProductRepository productRepository, PasswordEncoder passwordEncoder, CustomerRepository customerRepository, OrderRepository orderRepository, ShopRepository shopRepository, com.pos.service.SubscriptionService subscriptionService) {
         this.userRepository = userRepository;
         this.productRepository = productRepository;
         this.passwordEncoder = passwordEncoder;
         this.customerRepository = customerRepository;
         this.orderRepository = orderRepository;
         this.shopRepository = shopRepository;
+        this.subscriptionService = subscriptionService;
     }
 
     @Override
@@ -42,6 +44,7 @@ public class DataInitializer implements CommandLineRunner {
         if (userRepository.findByUsername("admin").isEmpty()) {
             Shop defaultShop = new Shop();
             defaultShop.setName("Default Shop");
+            subscriptionService.initializeTrial(defaultShop);
             defaultShop = shopRepository.save(defaultShop);
 
             User admin = new User();
@@ -64,6 +67,7 @@ public class DataInitializer implements CommandLineRunner {
                 Shop legacyShop = new Shop();
                 legacyShop.setName((user.getFullName() == null ? user.getUsername() : user.getFullName()) + " Shop");
                 legacyShop.setPhone(user.getPhone());
+                subscriptionService.initializeTrial(legacyShop);
                 user.setShop(shopRepository.save(legacyShop));
                 userRepository.save(user);
             }
@@ -71,6 +75,13 @@ public class DataInitializer implements CommandLineRunner {
 
         admin = userRepository.findByUsername("admin")
                 .orElseThrow(() -> new RuntimeException("Default admin user is required"));
+
+        shopRepository.findAll().forEach(shop -> {
+            if (shop.getTrialEndsAt() == null && shop.getSubscriptionEndsAt() == null) {
+                subscriptionService.initializeTrial(shop);
+                shopRepository.save(shop);
+            }
+        });
 
         User finalAdmin = admin;
         productRepository.findAll().stream()

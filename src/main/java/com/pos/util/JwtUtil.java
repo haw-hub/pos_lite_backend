@@ -71,6 +71,20 @@ public class JwtUtil {
                 .compact();
     }
 
+    public String generateSuperAdminToken(String username) {
+        return Jwts.builder()
+                .setClaims(Map.of("role", "SUPER_ADMIN"))
+                .setSubject(username)
+                .setIssuedAt(new Date())
+                .setExpiration(new Date(System.currentTimeMillis() + expiration))
+                .signWith(getSigningKey(), SignatureAlgorithm.HS256)
+                .compact();
+    }
+
+    public String extractRole(String token) {
+        return extractAllClaims(token).get("role", String.class);
+    }
+
     public Boolean validateToken(String token, UserDetails userDetails) {
         final String username = extractUsername(token);
         return (username.equals(userDetails.getUsername()) && !isTokenExpired(token));

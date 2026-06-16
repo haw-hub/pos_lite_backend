@@ -1,6 +1,8 @@
 package com.pos.dto.response;
 
+import com.pos.enums.SubscriptionStatus;
 import lombok.Data;
+import java.time.LocalDateTime;
 
 @Data
 public class AuthResponse {
@@ -11,4 +13,7 @@ public class AuthResponse {
     private String fullName;
     private Long shopId;
     private String shopName;
+    private SubscriptionStatus subscriptionStatus;
+    private LocalDateTime trialEndsAt;
+    private LocalDateTime subscriptionEndsAt;
 }

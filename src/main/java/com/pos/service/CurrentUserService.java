@@ -13,13 +13,21 @@ public class CurrentUserService {
     }
 
     public User require(String username) {
+        User user = requireAccountOnly(username);
+        if (user.getShop() == null || !user.getShop().isActive()) {
+            throw new RuntimeException("Shop account is inactive or missing");
+        }
+        return user;
+    }
+
+    public User requireAccountOnly(String username) {
         User user = userRepository.findByUsername(username)
                 .orElseThrow(() -> new RuntimeException("User not found"));
         if (!user.isActive()) {
             throw new RuntimeException("User account is inactive");
         }
-        if (user.getShop() == null || !user.getShop().isActive()) {
-            throw new RuntimeException("Shop account is inactive or missing");
+        if (user.getShop() == null) {
+            throw new RuntimeException("Shop account is missing");
         }
         return user;
     }

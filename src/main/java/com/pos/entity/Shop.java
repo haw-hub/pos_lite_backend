@@ -1,5 +1,6 @@
 package com.pos.entity;
 
+import com.pos.enums.SubscriptionStatus;
 import jakarta.persistence.*;
 import lombok.Data;
 
@@ -19,6 +20,13 @@ public class Shop {
     private String phone;
     private String address;
     private boolean active = true;
+
+    @Enumerated(EnumType.STRING)
+    @Column(nullable = false)
+    private SubscriptionStatus subscriptionStatus = SubscriptionStatus.TRIAL;
+
+    private LocalDateTime trialEndsAt;
+    private LocalDateTime subscriptionEndsAt;
     private LocalDateTime createdAt;
 
     @PrePersist

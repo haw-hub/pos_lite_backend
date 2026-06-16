@@ -11,6 +11,7 @@ import com.pos.enums.UserRole;
 import com.pos.repository.UserRepository;
 import com.pos.repository.ShopRepository;
 import com.pos.util.JwtUtil;
+import com.pos.exception.SubscriptionRequiredException;
 import org.springframework.security.authentication.AuthenticationManager;
 import org.springframework.security.authentication.UsernamePasswordAuthenticationToken;
 import org.springframework.security.core.userdetails.UserDetails;
@@ -30,19 +31,22 @@ public class AuthService {
     private final UserDetailsService userDetailsService;
     private final PasswordEncoder passwordEncoder;
     private final ShopRepository shopRepository;
+    private final SubscriptionService subscriptionService;
 
     public AuthService(UserRepository userRepository,
                        JwtUtil jwtUtil,
                        AuthenticationManager authenticationManager,
                        UserDetailsService userDetailsService,
                        PasswordEncoder passwordEncoder,
-                       ShopRepository shopRepository) {
+                       ShopRepository shopRepository,
+                       SubscriptionService subscriptionService) {
         this.userRepository = userRepository;
         this.jwtUtil = jwtUtil;
         this.authenticationManager = authenticationManager;
         this.userDetailsService = userDetailsService;
         this.passwordEncoder = passwordEncoder;
         this.shopRepository = shopRepository;
+        this.subscriptionService = subscriptionService;
     }
 
     public AuthResponse login(LoginRequest request) {
@@ -59,8 +63,11 @@ public class AuthService {
         if (!user.isActive()) {
             throw new RuntimeException("User account is inactive");
         }
-        if (user.getShop() == null || !user.getShop().isActive()) {
-            throw new RuntimeException("Shop account is inactive or missing");
+        if (user.getShop() == null) {
+            throw new RuntimeException("Shop account is missing");
+        }
+        if (!subscriptionService.canUseApp(user.getShop())) {
+            throw new SubscriptionRequiredException("Shop subscription has expired or access is suspended");
         }
 
         // Load UserDetails for token generation
@@ -75,6 +82,9 @@ public class AuthService {
         response.setFullName(user.getFullName());
         response.setShopId(user.getShop().getId());
         response.setShopName(user.getShop().getName());
+        response.setSubscriptionStatus(subscriptionService.effectiveStatus(user.getShop()));
+        response.setTrialEndsAt(user.getShop().getTrialEndsAt());
+        response.setSubscriptionEndsAt(user.getShop().getSubscriptionEndsAt());
 
         return response;
     }
@@ -98,6 +108,7 @@ public class AuthService {
                 ? request.getFullName() + " Shop"
                 : requestedShopName.trim());
         shop.setPhone(request.getPhone());
+        subscriptionService.initializeTrial(shop);
         shop = shopRepository.save(shop);
 
         User user = new User();

@@ -10,6 +10,8 @@ import com.pos.repository.OrderRepository;
 import com.pos.repository.ProductRepository;
 import com.pos.repository.UserRepository;
 import com.pos.repository.ShopRepository;
+import com.pos.service.ReportService;
+import com.pos.service.DailyClosingService;
 import jakarta.transaction.Transactional;
 import org.junit.jupiter.api.Test;
 import org.springframework.boot.test.context.SpringBootTest;
@@ -17,6 +19,7 @@ import org.springframework.beans.factory.annotation.Autowired;
 
 import java.math.BigDecimal;
 import java.util.UUID;
+import java.time.LocalDate;
 
 import static org.assertj.core.api.Assertions.assertThat;
 
@@ -31,6 +34,10 @@ class ApplicationTests {
 	private OrderRepository orderRepository;
 	@Autowired
 	private ShopRepository shopRepository;
+	@Autowired
+	private ReportService reportService;
+	@Autowired
+	private DailyClosingService dailyClosingService;
 
 	@Test
 	void contextLoads() {
@@ -62,6 +69,7 @@ class ApplicationTests {
 		order.setSubtotal(BigDecimal.TEN);
 		order.setTax(BigDecimal.ZERO);
 		order.setTotalAmount(BigDecimal.TEN);
+		order.setTotalProfit(BigDecimal.valueOf(2));
 		orderRepository.save(order);
 
 		assertThat(productRepository.findByShopIdAndDeletedFalse(admin.getShop().getId())).hasSize(1);
@@ -70,6 +78,22 @@ class ApplicationTests {
 		assertThat(orderRepository.findByShopId(admin.getShop().getId())).hasSize(1);
 		assertThat(orderRepository.findByShopId(cashier.getShop().getId())).hasSize(1);
 		assertThat(orderRepository.findByShopId(otherShopUser.getShop().getId())).isEmpty();
+
+		var report = reportService.summary(
+				admin.getUsername(),
+				LocalDate.now().minusDays(1),
+				LocalDate.now().plusDays(1)
+		);
+		assertThat(report.getTotalSales()).isEqualByComparingTo(BigDecimal.TEN);
+		assertThat(report.getTotalCost()).isEqualByComparingTo(BigDecimal.valueOf(8));
+		assertThat(report.getTotalProfit()).isEqualByComparingTo(BigDecimal.valueOf(2));
+		assertThat(report.getCashiers()).hasSize(1);
+
+		var closing = dailyClosingService.close(LocalDate.now(), admin.getUsername());
+		assertThat(closing.getTotalSales()).isEqualByComparingTo(BigDecimal.TEN);
+		assertThat(closing.getSummary().getCashiers()).hasSize(1);
+		assertThat(dailyClosingService.get(LocalDate.now(), cashier.getUsername()).getId())
+				.isEqualTo(closing.getId());
 	}
 
 	private Shop createShop(String name) {

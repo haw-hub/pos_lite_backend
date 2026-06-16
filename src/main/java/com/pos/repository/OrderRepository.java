@@ -29,12 +29,14 @@ public interface OrderRepository extends JpaRepository<Order, Long> {
     List<Order> findByCreatedAtAfter(LocalDateTime date);
     List<Order> findByShopId(Long shopId);
     List<Order> findByShopIdAndCreatedAtAfter(Long shopId, LocalDateTime date);
+    List<Order> findByShopIdAndCreatedAtBetweenOrderByCreatedAtDesc(Long shopId, LocalDateTime start, LocalDateTime end);
 
     // Find orders between dates
     List<Order> findByCreatedAtBetween(LocalDateTime startDate, LocalDateTime endDate);
 
     // Find orders by status and date range
     List<Order> findByStatusAndCreatedAtAfter(OrderStatus status, LocalDateTime date);
+    long countByShopId(Long shopId);
 
     // Count orders today
     @Query("SELECT COUNT(o) FROM Order o WHERE DATE(o.createdAt) = CURRENT_DATE")

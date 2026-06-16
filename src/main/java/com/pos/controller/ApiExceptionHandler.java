@@ -7,9 +7,19 @@ import org.springframework.web.bind.annotation.RestControllerAdvice;
 
 import java.util.Map;
 import java.util.Objects;
+import com.pos.exception.SubscriptionRequiredException;
 
 @RestControllerAdvice
 public class ApiExceptionHandler {
+
+    @ExceptionHandler(SubscriptionRequiredException.class)
+    public ResponseEntity<Map<String, String>> handleSubscriptionRequired(SubscriptionRequiredException exception) {
+        return ResponseEntity.status(HttpStatus.PAYMENT_REQUIRED)
+                .body(Map.of(
+                        "message", Objects.toString(exception.getMessage(), "Subscription required"),
+                        "code", "SUBSCRIPTION_REQUIRED"
+                ));
+    }
 
     @ExceptionHandler(IllegalArgumentException.class)
     public ResponseEntity<Map<String, String>> handleBadRequest(IllegalArgumentException exception) {

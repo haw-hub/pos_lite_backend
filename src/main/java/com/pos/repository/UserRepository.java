@@ -13,4 +13,5 @@ public interface UserRepository extends JpaRepository<User, Long> {
     boolean existsByEmail(String email);
     List<User> findByShopIdOrderByCreatedAtAsc(Long shopId);
     Optional<User> findByIdAndShopId(Long id, Long shopId);
+    long countByShopId(Long shopId);
 }
