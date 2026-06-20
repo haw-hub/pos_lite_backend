@@ -100,12 +100,17 @@ public class OrderService {
             product.setStock(product.getStock() - itemRequest.getQuantity());
             productRepository.save(product);
 
+            BigDecimal unitPrice = itemRequest.getUnitPrice() != null
+                    && itemRequest.getUnitPrice().compareTo(BigDecimal.ZERO) > 0
+                    ? itemRequest.getUnitPrice()
+                    : product.getPrice();
+
             OrderItem item = new OrderItem();
             item.setProduct(product);
             item.setQuantity(itemRequest.getQuantity());
-            item.setUnitPrice(product.getPrice());
+            item.setUnitPrice(unitPrice);
             item.setUnitCost(product.getCostPrice() == null ? BigDecimal.ZERO : product.getCostPrice());
-            item.setTotalPrice(product.getPrice().multiply(BigDecimal.valueOf(itemRequest.getQuantity())));
+            item.setTotalPrice(unitPrice.multiply(BigDecimal.valueOf(itemRequest.getQuantity())));
             item.setProfit(
                     item.getUnitPrice()
                             .subtract(item.getUnitCost())
@@ -136,6 +141,10 @@ public class OrderService {
             if (request.getCustomerName() == null
                     || request.getCustomerName().isBlank()) {
                 throw new RuntimeException("Customer name is required");
+            }
+
+            if (request.getDueDate() == null) {
+                throw new RuntimeException("Debt due date is required");
             }
 
             Customer customer =
@@ -179,6 +188,10 @@ public class OrderService {
             debt.setPaidAmount(BigDecimal.ZERO);
 
             debt.setRemainingAmount(savedOrder.getTotalAmount());
+
+            debt.setDueDate(request.getDueDate());
+
+            debt.setNote(request.getCreditNote());
 
             debtRepository.save(debt);
         }

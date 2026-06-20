@@ -5,7 +5,7 @@ import com.pos.enums.PaymentMethod;
 import lombok.Data;
 
 import java.math.BigDecimal;
-import java.time.LocalDateTime;
+import java.time.LocalDate;
 import java.util.List;
 
 @Data
@@ -18,9 +18,14 @@ public class OrderRequest {
 
     private String customerPhone;
 
+    private LocalDate dueDate;
+
+    private String creditNote;
+
     @Data
     public static class OrderItemRequest {
         private Long productId;
         private Integer quantity;
+        private BigDecimal unitPrice;
     }
 }

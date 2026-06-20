@@ -35,8 +35,15 @@ public class DailyClosing {
     private BigDecimal totalCost;
     private BigDecimal totalProfit;
     private BigDecimal profitMargin;
+    private BigDecimal cashExpected;
+    private BigDecimal cashInHand;
+    private BigDecimal cashDifference;
+    private BigDecimal digitalPayTotal;
+    private BigDecimal creditTotal;
+    private BigDecimal refundAmount;
     private Long totalOrders;
     private Long itemsSold;
+    private String note;
 
     @Lob
     @Column(columnDefinition = "LONGTEXT", nullable = false)

@@ -4,6 +4,7 @@ import jakarta.persistence.*;
 import lombok.Data;
 
 import java.math.BigDecimal;
+import java.time.LocalDate;
 import java.time.LocalDateTime;
 
 @Entity
@@ -26,6 +27,10 @@ public class Debt {
     private BigDecimal paidAmount;
 
     private BigDecimal remainingAmount;
+
+    private LocalDate dueDate;
+
+    private String note;
 
     private LocalDateTime createdAt;
 

@@ -11,6 +11,8 @@ public class SuperAdminOverviewResponse {
     private long activeShops;
     private long expiredShops;
     private long suspendedShops;
+    private long paidPayments;
+    private long unpaidPayments;
     private long totalUsers;
     private long totalProducts;
     private long totalOrders;

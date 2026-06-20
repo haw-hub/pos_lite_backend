@@ -1,10 +1,12 @@
 package com.pos.dto.response;
 
 import com.pos.entity.Shop;
+import com.pos.enums.ShopFeature;
 import com.pos.enums.SubscriptionStatus;
 import lombok.Data;
 
 import java.time.LocalDateTime;
+import java.util.Set;
 
 @Data
 public class SuperAdminShopResponse {
@@ -20,6 +22,7 @@ public class SuperAdminShopResponse {
     private long users;
     private long products;
     private long orders;
+    private Set<ShopFeature> enabledFeatures;
 
     public static SuperAdminShopResponse from(
             Shop shop,
@@ -41,6 +44,7 @@ public class SuperAdminShopResponse {
         response.setUsers(users);
         response.setProducts(products);
         response.setOrders(orders);
+        response.setEnabledFeatures(shop.getEnabledFeatures());
         return response;
     }
 }

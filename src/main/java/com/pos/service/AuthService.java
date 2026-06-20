@@ -11,7 +11,6 @@ import com.pos.enums.UserRole;
 import com.pos.repository.UserRepository;
 import com.pos.repository.ShopRepository;
 import com.pos.util.JwtUtil;
-import com.pos.exception.SubscriptionRequiredException;
 import org.springframework.security.authentication.AuthenticationManager;
 import org.springframework.security.authentication.UsernamePasswordAuthenticationToken;
 import org.springframework.security.core.userdetails.UserDetails;
@@ -66,10 +65,6 @@ public class AuthService {
         if (user.getShop() == null) {
             throw new RuntimeException("Shop account is missing");
         }
-        if (!subscriptionService.canUseApp(user.getShop())) {
-            throw new SubscriptionRequiredException("Shop subscription has expired or access is suspended");
-        }
-
         // Load UserDetails for token generation
         UserDetails userDetails = userDetailsService.loadUserByUsername(request.getUsername());
         String token = jwtUtil.generateToken(user);
@@ -85,6 +80,7 @@ public class AuthService {
         response.setSubscriptionStatus(subscriptionService.effectiveStatus(user.getShop()));
         response.setTrialEndsAt(user.getShop().getTrialEndsAt());
         response.setSubscriptionEndsAt(user.getShop().getSubscriptionEndsAt());
+        response.setEnabledFeatures(user.getShop().getEnabledFeatures());
 
         return response;
     }

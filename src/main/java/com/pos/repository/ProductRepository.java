@@ -28,6 +28,8 @@ public interface ProductRepository extends JpaRepository<Product, Long> {
 
     Optional<Product> findByIdAndShopId(Long id, Long shopId);
     Optional<Product> findByShopIdAndClientReference(Long shopId, String clientReference);
+    Optional<Product> findByShopIdAndBarcode(Long shopId, String barcode);
+    Optional<Product> findByShopIdAndNameIgnoreCase(Long shopId, String name);
     long countByShopIdAndDeletedFalse(Long shopId);
 
 }

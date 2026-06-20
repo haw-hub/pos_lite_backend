@@ -18,8 +18,15 @@ public class DailyClosingResponse {
     private BigDecimal totalCost;
     private BigDecimal totalProfit;
     private BigDecimal profitMargin;
+    private BigDecimal cashExpected;
+    private BigDecimal cashInHand;
+    private BigDecimal cashDifference;
+    private BigDecimal digitalPayTotal;
+    private BigDecimal creditTotal;
+    private BigDecimal refundAmount;
     private Long totalOrders;
     private Long itemsSold;
+    private String note;
     private ReportSummaryResponse summary;
 
     public static DailyClosingResponse from(DailyClosing closing, ReportSummaryResponse summary) {
@@ -33,8 +40,15 @@ public class DailyClosingResponse {
         response.setTotalCost(closing.getTotalCost());
         response.setTotalProfit(closing.getTotalProfit());
         response.setProfitMargin(closing.getProfitMargin());
+        response.setCashExpected(closing.getCashExpected());
+        response.setCashInHand(closing.getCashInHand());
+        response.setCashDifference(closing.getCashDifference());
+        response.setDigitalPayTotal(closing.getDigitalPayTotal());
+        response.setCreditTotal(closing.getCreditTotal());
+        response.setRefundAmount(closing.getRefundAmount());
         response.setTotalOrders(closing.getTotalOrders());
         response.setItemsSold(closing.getItemsSold());
+        response.setNote(closing.getNote());
         response.setSummary(summary);
         return response;
     }

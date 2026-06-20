@@ -2,6 +2,7 @@ package com.pos.service;
 
 import tools.jackson.core.JacksonException;
 import tools.jackson.databind.ObjectMapper;
+import com.pos.dto.request.DailyClosingRequest;
 import com.pos.dto.response.DailyClosingResponse;
 import com.pos.dto.response.ReportSummaryResponse;
 import com.pos.entity.DailyClosing;
@@ -11,8 +12,10 @@ import com.pos.repository.DailyClosingRepository;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 
+import java.math.BigDecimal;
 import java.time.LocalDate;
 import java.util.List;
+import java.util.Optional;
 
 @Service
 public class DailyClosingService {
@@ -35,6 +38,11 @@ public class DailyClosingService {
 
     @Transactional
     public DailyClosingResponse close(LocalDate date, String username) {
+        return close(date, username, null);
+    }
+
+    @Transactional
+    public DailyClosingResponse close(LocalDate date, String username, DailyClosingRequest request) {
         User user = requireManager(username);
         if (date.isAfter(LocalDate.now())) {
             throw new IllegalArgumentException("Future dates cannot be closed");
@@ -44,6 +52,10 @@ public class DailyClosingService {
         }
 
         ReportSummaryResponse summary = reportService.summary(username, date, date);
+        BigDecimal cashExpected = paymentTotal(summary, "CASH");
+        BigDecimal digitalPayTotal = paymentTotal(summary, "TRANSFER");
+        BigDecimal creditTotal = paymentTotal(summary, "CREDIT");
+        BigDecimal cashInHand = amount(request == null ? null : request.getCashInHand());
         DailyClosing closing = new DailyClosing();
         closing.setShop(user.getShop());
         closing.setBusinessDate(date);
@@ -52,18 +64,30 @@ public class DailyClosingService {
         closing.setTotalCost(summary.getTotalCost());
         closing.setTotalProfit(summary.getTotalProfit());
         closing.setProfitMargin(summary.getProfitMargin());
+        closing.setCashExpected(cashExpected);
+        closing.setCashInHand(cashInHand);
+        closing.setCashDifference(cashInHand.subtract(cashExpected));
+        closing.setDigitalPayTotal(digitalPayTotal);
+        closing.setCreditTotal(creditTotal);
+        closing.setRefundAmount(summary.getRefundAmount());
         closing.setTotalOrders(summary.getTotalOrders());
         closing.setItemsSold(summary.getItemsSold());
+        closing.setNote(request == null ? null : request.getNote());
         closing.setSnapshotJson(write(summary));
         return DailyClosingResponse.from(dailyClosingRepository.save(closing), summary);
     }
 
     @Transactional(readOnly = true)
     public DailyClosingResponse get(LocalDate date, String username) {
-        User user = requireManager(username);
-        DailyClosing closing = dailyClosingRepository.findByShopIdAndBusinessDate(user.getShop().getId(), date)
+        return find(date, username)
                 .orElseThrow(() -> new RuntimeException("Daily closing not found"));
-        return response(closing);
+    }
+
+    @Transactional(readOnly = true)
+    public Optional<DailyClosingResponse> find(LocalDate date, String username) {
+        User user = requireManager(username);
+        return dailyClosingRepository.findByShopIdAndBusinessDate(user.getShop().getId(), date)
+                .map(this::response);
     }
 
     @Transactional(readOnly = true)
@@ -98,5 +122,17 @@ public class DailyClosingService {
         } catch (JacksonException exception) {
             throw new RuntimeException("Unable to save daily closing");
         }
+    }
+
+    private BigDecimal paymentTotal(ReportSummaryResponse summary, String method) {
+        return summary.getPayments().stream()
+                .filter(payment -> method.equals(payment.getPaymentMethod()))
+                .map(ReportSummaryResponse.PaymentBreakdown::getTotalAmount)
+                .findFirst()
+                .orElse(BigDecimal.ZERO);
+    }
+
+    private BigDecimal amount(BigDecimal value) {
+        return value == null ? BigDecimal.ZERO : value;
     }
 }

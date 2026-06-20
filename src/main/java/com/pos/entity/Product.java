@@ -39,11 +39,22 @@ public class Product {
     @Column(nullable = false)
     private BigDecimal price;
 
+    private BigDecimal wholesalePrice;
+
+    private BigDecimal vipPrice;
+
     @Column(nullable = false, columnDefinition = "DECIMAL(19,2) DEFAULT 0")
     private BigDecimal costPrice = BigDecimal.ZERO;
 
     @Column(nullable = false)
     private Integer stock = 0;
+
+    private String unitName = "ခု";
+
+    private String packUnitName;
+
+    @Column(nullable = false)
+    private Integer packSize = 1;
 
     private String barcode;
 

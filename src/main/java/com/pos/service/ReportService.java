@@ -5,6 +5,8 @@ import com.pos.entity.Order;
 import com.pos.entity.OrderItem;
 import com.pos.enums.OrderStatus;
 import com.pos.repository.OrderRepository;
+import com.pos.repository.PurchaseRepository;
+import com.pos.repository.RefundRepository;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 
@@ -18,10 +20,19 @@ import java.util.Map;
 @Service
 public class ReportService {
     private final OrderRepository orderRepository;
+    private final RefundRepository refundRepository;
+    private final PurchaseRepository purchaseRepository;
     private final CurrentUserService currentUserService;
 
-    public ReportService(OrderRepository orderRepository, CurrentUserService currentUserService) {
+    public ReportService(
+            OrderRepository orderRepository,
+            RefundRepository refundRepository,
+            PurchaseRepository purchaseRepository,
+            CurrentUserService currentUserService
+    ) {
         this.orderRepository = orderRepository;
+        this.refundRepository = refundRepository;
+        this.purchaseRepository = purchaseRepository;
         this.currentUserService = currentUserService;
     }
 
@@ -82,6 +93,19 @@ public class ReportService {
                 product.setProfit(product.getProfit().add(amount(orderItem.getProfit())));
             }
         }
+
+        var refunds = refundRepository.findByShopIdAndCreatedAtBetween(shopId, start, end);
+        for (var refund : refunds) {
+            response.setRefundAmount(response.getRefundAmount().add(amount(refund.getAmount())));
+            response.setRefundProfitAdjustment(response.getRefundProfitAdjustment().add(amount(refund.getProfitAdjustment())));
+        }
+        response.setRefundCount(refunds.size());
+
+        var purchases = purchaseRepository.findByShopIdAndCreatedAtBetween(shopId, start, end);
+        for (var purchase : purchases) {
+            response.setPurchaseCost(response.getPurchaseCost().add(amount(purchase.getTotalCost())));
+        }
+        response.setPurchaseCount(purchases.size());
 
         response.setTotalOrders(orders.size());
         response.setTotalCost(response.getTotalSales().subtract(response.getTotalProfit()));

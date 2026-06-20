@@ -32,6 +32,7 @@ public class SubscriptionFilter extends OncePerRequestFilter {
         return path.startsWith("/api/auth/")
                 || path.startsWith("/api/super-admin/")
                 || path.startsWith("/api/subscription/status")
+                || path.startsWith("/api/subscription/payment-proof")
                 || path.startsWith("/api/test/")
                 || "OPTIONS".equalsIgnoreCase(request.getMethod());
     }

@@ -1,8 +1,10 @@
 package com.pos.dto.response;
 
 import com.pos.enums.SubscriptionStatus;
+import com.pos.enums.ShopFeature;
 import lombok.Data;
 import java.time.LocalDateTime;
+import java.util.Set;
 
 @Data
 public class AuthResponse {
@@ -16,4 +18,5 @@ public class AuthResponse {
     private SubscriptionStatus subscriptionStatus;
     private LocalDateTime trialEndsAt;
     private LocalDateTime subscriptionEndsAt;
+    private Set<ShopFeature> enabledFeatures;
 }

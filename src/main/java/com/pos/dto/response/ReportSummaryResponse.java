@@ -14,8 +14,13 @@ public class ReportSummaryResponse {
     private BigDecimal totalSales = BigDecimal.ZERO;
     private BigDecimal totalCost = BigDecimal.ZERO;
     private BigDecimal totalProfit = BigDecimal.ZERO;
+    private BigDecimal refundAmount = BigDecimal.ZERO;
+    private BigDecimal refundProfitAdjustment = BigDecimal.ZERO;
+    private BigDecimal purchaseCost = BigDecimal.ZERO;
     private BigDecimal profitMargin = BigDecimal.ZERO;
     private long totalOrders;
+    private long refundCount;
+    private long purchaseCount;
     private long itemsSold;
     private List<PaymentBreakdown> payments = new ArrayList<>();
     private List<ProductPerformance> topProducts = new ArrayList<>();

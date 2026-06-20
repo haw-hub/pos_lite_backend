@@ -5,10 +5,13 @@ import com.pos.dto.response.SuperAdminAuthResponse;
 import com.pos.dto.response.SuperAdminOverviewResponse;
 import com.pos.dto.response.SuperAdminShopResponse;
 import com.pos.entity.Shop;
+import com.pos.enums.ShopFeature;
+import com.pos.enums.SubscriptionPaymentStatus;
 import com.pos.enums.SubscriptionStatus;
 import com.pos.repository.OrderRepository;
 import com.pos.repository.ProductRepository;
 import com.pos.repository.ShopRepository;
+import com.pos.repository.SubscriptionPaymentRepository;
 import com.pos.repository.UserRepository;
 import com.pos.util.JwtUtil;
 import org.springframework.beans.factory.annotation.Value;
@@ -16,6 +19,7 @@ import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 
 import java.util.List;
+import java.util.Set;
 
 @Service
 public class SuperAdminService {
@@ -23,6 +27,7 @@ public class SuperAdminService {
     private final UserRepository userRepository;
     private final ProductRepository productRepository;
     private final OrderRepository orderRepository;
+    private final SubscriptionPaymentRepository paymentRepository;
     private final SubscriptionService subscriptionService;
     private final JwtUtil jwtUtil;
     private final String username;
@@ -33,6 +38,7 @@ public class SuperAdminService {
             UserRepository userRepository,
             ProductRepository productRepository,
             OrderRepository orderRepository,
+            SubscriptionPaymentRepository paymentRepository,
             SubscriptionService subscriptionService,
             JwtUtil jwtUtil,
             @Value("${super-admin.username}") String username,
@@ -42,6 +48,7 @@ public class SuperAdminService {
         this.userRepository = userRepository;
         this.productRepository = productRepository;
         this.orderRepository = orderRepository;
+        this.paymentRepository = paymentRepository;
         this.subscriptionService = subscriptionService;
         this.jwtUtil = jwtUtil;
         this.username = username;
@@ -67,6 +74,8 @@ public class SuperAdminService {
                 countStatus(shops, SubscriptionStatus.ACTIVE),
                 countStatus(shops, SubscriptionStatus.EXPIRED),
                 countStatus(shops, SubscriptionStatus.SUSPENDED),
+                paymentRepository.countByStatus(SubscriptionPaymentStatus.PAID),
+                paymentRepository.countByStatus(SubscriptionPaymentStatus.UNPAID),
                 userRepository.count(),
                 productRepository.count(),
                 orderRepository.count()
@@ -86,6 +95,16 @@ public class SuperAdminService {
     @Transactional
     public SuperAdminShopResponse setSuspended(Long shopId, boolean suspended) {
         return toResponse(subscriptionService.setSuspended(requireShop(shopId), suspended));
+    }
+
+    @Transactional
+    public SuperAdminShopResponse setFeatures(Long shopId, Set<ShopFeature> features) {
+        Shop shop = requireShop(shopId);
+        shop.getEnabledFeatures().clear();
+        if (features != null) {
+            shop.getEnabledFeatures().addAll(features);
+        }
+        return toResponse(shopRepository.save(shop));
     }
 
     private Shop requireShop(Long shopId) {

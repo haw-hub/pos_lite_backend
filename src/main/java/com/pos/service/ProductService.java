@@ -41,6 +41,7 @@ public class ProductService {
         product.setOwner(user);
         product.setShop(user.getShop());
         validateCostPrice(product);
+        normalizeProductOptions(product);
         product.setDeleted(false);
         return productRepository.save(product);
     }
@@ -52,11 +53,17 @@ public class ProductService {
         product.setName(productDetails.getName());
         product.setDescription(productDetails.getDescription());
         product.setPrice(productDetails.getPrice());
+        product.setWholesalePrice(productDetails.getWholesalePrice());
+        product.setVipPrice(productDetails.getVipPrice());
         product.setCostPrice(productDetails.getCostPrice());
         product.setStock(productDetails.getStock());
+        product.setUnitName(productDetails.getUnitName());
+        product.setPackUnitName(productDetails.getPackUnitName());
+        product.setPackSize(productDetails.getPackSize());
         product.setBarcode(productDetails.getBarcode());
         product.setImageUrl(productDetails.getImageUrl());
         product.setExpiryDate(productDetails.getExpiryDate());
+        normalizeProductOptions(product);
         return productRepository.save(product);
     }
 
@@ -108,6 +115,21 @@ public class ProductService {
         if (product.getCostPrice() == null
                 || product.getCostPrice().compareTo(BigDecimal.ZERO) <= 0) {
             throw new IllegalArgumentException("Cost price must be greater than zero");
+        }
+    }
+
+    private void normalizeProductOptions(Product product) {
+        if (product.getUnitName() == null || product.getUnitName().isBlank()) {
+            product.setUnitName("ခု");
+        }
+        if (product.getPackSize() == null || product.getPackSize() < 1) {
+            product.setPackSize(1);
+        }
+        if (product.getWholesalePrice() != null && product.getWholesalePrice().compareTo(BigDecimal.ZERO) <= 0) {
+            product.setWholesalePrice(null);
+        }
+        if (product.getVipPrice() != null && product.getVipPrice().compareTo(BigDecimal.ZERO) <= 0) {
+            product.setVipPrice(null);
         }
     }
 }
