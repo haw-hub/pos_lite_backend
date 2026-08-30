@@ -1,6 +1,8 @@
 HELP.md
 target/
 .env
+uploads/
+*.log
 backend-*.log
 hs_err_pid*.log
 replay_pid*.log
