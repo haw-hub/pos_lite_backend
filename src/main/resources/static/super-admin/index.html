@@ -1,0 +1,60 @@
+<!doctype html>
+<html lang="my">
+<head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+  <title>POS Myanmar — Super Admin</title>
+  <style>
+    :root { --navy:#182A4E; --orange:#FF7504; --bg:#f4f6fa; --line:#e3e7ef; --text:#263247; --muted:#6d788b; --danger:#cf3f3f; }
+    * { box-sizing:border-box; } body { margin:0; background:var(--bg); color:var(--text); font-family:system-ui,-apple-system,"Noto Sans Myanmar",sans-serif; }
+    header { background:var(--navy); color:#fff; padding:20px max(20px,calc((100% - 1200px)/2)); display:flex; justify-content:space-between; align-items:center; gap:16px; }
+    h1 { font-size:21px; margin:0; } h2 { font-size:18px; margin:0 0 14px; } p { line-height:1.5; } button,input,select { font:inherit; }
+    button { cursor:pointer; border:0; border-radius:8px; padding:10px 13px; font-weight:700; } .primary { background:var(--orange); color:white; } .secondary { background:#edf1f7; color:var(--navy); } .danger { background:#fff0f0; color:var(--danger); }
+    main { max-width:1200px; margin:24px auto; padding:0 20px 40px; } .hidden { display:none!important; }
+    #login { max-width:420px; margin:70px auto; background:white; padding:28px; border-radius:16px; box-shadow:0 12px 36px #182a4e18; }
+    label { display:block; font-weight:700; font-size:14px; margin:14px 0 6px; } input { width:100%; padding:12px; border:1px solid var(--line); border-radius:8px; color:var(--text); background:white; }
+    .error { color:var(--danger); min-height:22px; margin:12px 0 0; font-size:14px; } .grid { display:grid; grid-template-columns:repeat(5,minmax(0,1fr)); gap:14px; margin-bottom:24px; }
+    .card { background:#fff; border:1px solid var(--line); border-radius:12px; padding:16px; } .metric-label { color:var(--muted); font-size:13px; } .metric-value { color:var(--navy); font-weight:800; font-size:27px; margin-top:7px; }
+    .toolbar { display:flex; justify-content:space-between; align-items:center; gap:12px; margin-bottom:14px; flex-wrap:wrap; } .search { max-width:340px; }
+    .table-wrap { overflow:auto; background:white; border:1px solid var(--line); border-radius:12px; } table { width:100%; border-collapse:collapse; min-width:850px; } th,td { padding:13px 14px; text-align:left; border-bottom:1px solid var(--line); font-size:14px; } th { background:#fafbfd; color:var(--muted); } tr:last-child td { border-bottom:0; }
+    .badge { display:inline-block; padding:4px 8px; border-radius:999px; font-size:12px; font-weight:800; background:#edf1f7; color:var(--navy); } .ACTIVE { background:#e6f7ed; color:#217a45; } .TRIAL { background:#fff4df; color:#9a6200; } .EXPIRED,.SUSPENDED { background:#fff0f0; color:#b33434; }
+    .actions { display:flex; gap:6px; flex-wrap:wrap; } .small { padding:7px 9px; font-size:12px; } .feature-list { display:flex; gap:5px; flex-wrap:wrap; max-width:220px; } .feature { background:#edf1f7; border-radius:5px; padding:3px 5px; font-size:11px; }
+    #toast { position:fixed; right:20px; bottom:20px; background:var(--navy); color:white; padding:13px 16px; border-radius:9px; box-shadow:0 8px 28px #0003; }
+    @media (max-width:850px) { .grid { grid-template-columns:repeat(2,1fr); } header { padding:16px 20px; } } @media (max-width:430px) { .grid { grid-template-columns:1fr 1fr; } main { padding:0 12px; } }
+  </style>
+</head>
+<body>
+  <header><h1>POS Myanmar — Super Admin</h1><button id="logout" class="secondary hidden">ထွက်မည်</button></header>
+  <main>
+    <section id="login"><h2>Super Admin ဝင်ရန်</h2><p class="metric-label">ဆိုင်များ၊ subscription နှင့် feature များကို စီမံပါ။</p><form id="loginForm"><label>Username</label><input id="username" autocomplete="username" required><label>Password</label><input id="password" type="password" autocomplete="current-password" required><button class="primary" style="width:100%;margin-top:20px">ဝင်မည်</button><p id="loginError" class="error"></p></form></section>
+    <section id="dashboard" class="hidden">
+      <div class="toolbar"><div><h2>System Overview</h2><span id="updated" class="metric-label"></span></div><div><input id="search" class="search" placeholder="ဆိုင်အမည်/ဖုန်း ရှာရန်"></div></div>
+      <div id="metrics" class="grid"></div>
+      <div class="card" style="margin-bottom:24px"><div class="toolbar"><div><h2>Trial Setting</h2><span class="metric-label">Shop အသစ်အတွက် default trial ရက်</span></div><div style="display:flex;gap:8px"><input id="trialDays" type="number" min="1" style="width:100px"><button id="saveTrial" class="primary">သိမ်းမည်</button></div></div></div>
+      <div class="toolbar"><h2>Shops</h2><button id="reload" class="secondary">↻ Refresh</button></div>
+      <div class="table-wrap"><table><thead><tr><th>ဆိုင်</th><th>Status</th><th>သက်တမ်း</th><th>Users / Products / Orders</th><th>Features</th><th>စီမံရန်</th></tr></thead><tbody id="shops"></tbody></table></div>
+    </section>
+  </main>
+  <div id="toast" class="hidden"></div>
+  <script>
+    const API='/api/super-admin', tokenKey='pos_super_admin_token'; let shops=[];
+    const $=id=>document.getElementById(id); const esc=value=>String(value ?? '').replace(/[&<>'"]/g,c=>({'&':'&amp;','<':'&lt;','>':'&gt;',"'":'&#39;','"':'&quot;'}[c]));
+    function toast(message){ $('toast').textContent=message; $('toast').classList.remove('hidden'); setTimeout(()=>$('toast').classList.add('hidden'),3200); }
+    async function request(path, options={}) { const headers={...(options.headers||{}),'Content-Type':'application/json'}; const token=sessionStorage.getItem(tokenKey); if(token) headers.Authorization='Bearer '+token; const response=await fetch(API+path,{...options,headers}); if(!response.ok){ const body=await response.text(); throw new Error(body||'Request မအောင်မြင်ပါ'); } return response.status===204?null:response.json(); }
+    const number=n=>Number(n||0).toLocaleString('en-US');
+    function renderOverview(data){ const values=[['စုစုပေါင်းဆိုင်',data.totalShops],['Active',data.activeShops],['Trial',data.trialShops],['Expired',data.expiredShops],['Suspended',data.suspendedShops],['Users',data.totalUsers],['Products',data.totalProducts],['Orders',data.totalOrders],['Pending payments',data.unpaidPayments],['Paid payments',data.paidPayments]]; $('metrics').innerHTML=values.map(([label,value])=>'<div class="card"><div class="metric-label">'+esc(label)+'</div><div class="metric-value">'+number(value)+'</div></div>').join(''); }
+    function date(value){ return value ? new Date(value).toLocaleDateString('en-GB') : '—'; }
+    function renderShops(){ const term=$('search').value.trim().toLowerCase(); const result=shops.filter(s=>(s.name+' '+(s.phone||'')).toLowerCase().includes(term)); $('shops').innerHTML=result.length?result.map(s=>'<tr><td><strong>'+esc(s.name)+'</strong><br><span class="metric-label">'+esc(s.phone||'—')+'</span></td><td><span class="badge '+esc(s.status)+'">'+esc(s.status)+'</span>'+(!s.active?' <span class="badge SUSPENDED">Disabled</span>':'')+'</td><td>Trial: '+date(s.trialEndsAt)+'<br>Sub: '+date(s.subscriptionEndsAt)+'</td><td>'+number(s.users)+' / '+number(s.products)+' / '+number(s.orders)+'</td><td><div class="feature-list">'+(s.enabledFeatures||[]).map(f=>'<span class="feature">'+esc(f)+'</span>').join('')+'</div></td><td><div class="actions"><button class="secondary small" onclick="extendShop('+s.id+')">+ လ</button><button class="secondary small" onclick="trialShop('+s.id+')">Trial</button><button class="'+(s.active?'danger':'primary')+' small" onclick="suspendShop('+s.id+','+s.active+')">'+(s.active?'ပိတ်':'ဖွင့်')+'</button><button class="secondary small" onclick="featuresShop('+s.id+')">Features</button></div></td></tr>').join(''):'<tr><td colspan="6" style="text-align:center;color:var(--muted);padding:32px">ဆိုင်မတွေ့ပါ</td></tr>'; }
+    async function load(){ try { const [overview,shopData,settings]=await Promise.all([request('/overview'),request('/shops'),request('/settings')]); shops=shopData; renderOverview(overview); renderShops(); $('trialDays').value=settings.defaultTrialDays; $('updated').textContent='Updated: '+new Date().toLocaleString(); } catch(error){ if(String(error.message).includes('401')) logout(); else toast('Data မရပါ: '+error.message); } }
+    async function action(path, options){ try { await request(path,options); toast('အောင်မြင်စွာ သိမ်းပြီးပါပြီ'); await load(); } catch(error){ toast('မအောင်မြင်ပါ: '+error.message); } }
+    window.extendShop=id=>{ const months=prompt('သက်တမ်းတိုးမည့် လအရေအတွက်','1'); if(months&&Number(months)>0) action('/shops/'+id+'/extend?months='+encodeURIComponent(months),{method:'POST'}); };
+    window.trialShop=id=>{ const days=prompt('Trial ရက်အရေအတွက်','7'); if(days&&Number(days)>0) action('/shops/'+id+'/trial?days='+encodeURIComponent(days),{method:'POST'}); };
+    window.suspendShop=(id,isActive)=>{ const text=isActive?'ဒီဆိုင်ကို ပိတ်မည်လား?':'ဒီဆိုင်ကို ပြန်ဖွင့်မည်လား?'; if(confirm(text)) action('/shops/'+id+'/suspend?value='+isActive,{method:'POST'}); };
+    window.featuresShop=id=>{ const shop=shops.find(s=>s.id===id); const all=['DAILY_CLOSING','MULTI_PRICE','STOCK_IN','VOUCHER_PRINT']; const selected=prompt('Features ကို comma ဖြင့်ထည့်ပါ:\n'+all.join(', '),(shop.enabledFeatures||[]).join(', ')); if(selected!==null){ const list=selected.split(',').map(v=>v.trim()).filter(v=>all.includes(v)); action('/shops/'+id+'/features',{method:'PUT',body:JSON.stringify(list)}); } };
+    function logout(){ sessionStorage.removeItem(tokenKey); $('dashboard').classList.add('hidden'); $('login').classList.remove('hidden'); $('logout').classList.add('hidden'); }
+    $('loginForm').addEventListener('submit',async event=>{ event.preventDefault(); $('loginError').textContent=''; try { const login=await request('/auth/login',{method:'POST',headers:{},body:JSON.stringify({username:$('username').value.trim(),password:$('password').value})}); sessionStorage.setItem(tokenKey,login.token); $('login').classList.add('hidden'); $('dashboard').classList.remove('hidden'); $('logout').classList.remove('hidden'); await load(); } catch(error){ $('loginError').textContent='Username သို့မဟုတ် password မမှန်ပါ။'; } });
+    $('logout').onclick=logout; $('reload').onclick=load; $('search').oninput=renderShops; $('saveTrial').onclick=()=>{ const days=Number($('trialDays').value); if(days>0) action('/settings/default-trial-days?days='+days,{method:'PUT'}); };
+    if(sessionStorage.getItem(tokenKey)){ $('login').classList.add('hidden'); $('dashboard').classList.remove('hidden'); $('logout').classList.remove('hidden'); load(); }
+  </script>
+</body>
+</html>

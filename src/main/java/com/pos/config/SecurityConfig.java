@@ -56,6 +56,7 @@ public class SecurityConfig {
                         // Public endpoints - no authentication required
                         .requestMatchers(HttpMethod.OPTIONS, "/**").permitAll()
                         .requestMatchers("/error").permitAll()
+                        .requestMatchers("/super-admin/**").permitAll()
                         .requestMatchers("/api/auth/**").permitAll()
                         .requestMatchers("/api/super-admin/auth/login").permitAll()
                         .requestMatchers("/uploads/**").permitAll()
