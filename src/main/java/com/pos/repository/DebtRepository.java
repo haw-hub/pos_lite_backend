@@ -13,6 +13,7 @@ public interface DebtRepository
     List<Debt> findByCustomerIdAndOrderShopId(Long customerId, Long shopId);
     List<Debt> findByOrderShopId(Long shopId);
     java.util.Optional<Debt> findByIdAndOrderShopId(Long id, Long shopId);
+    java.util.Optional<Debt> findByOrderClientReferenceAndOrderShopId(String clientReference, Long shopId);
 
     @Query("""
         SELECT new com.pos.dto.CustomerDebtSummaryDTO(

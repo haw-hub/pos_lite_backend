@@ -121,6 +121,18 @@ public class DebtService {
         return debtRepository.save(debt);
     }
 
+    @Transactional
+    public Debt makePaymentForOrderReference(
+            String clientReference,
+            DebtPaymentRequest request,
+            String username
+    ) {
+        Debt debt = debtRepository
+                .findByOrderClientReferenceAndOrderShopId(clientReference, shopId(username))
+                .orElseThrow(() -> new IllegalArgumentException("Debt order not found"));
+        return makePayment(debt.getId(), request, username);
+    }
+
     private Long shopId(String username) {
         return currentUserService.require(username).getShop().getId();
     }

@@ -74,6 +74,14 @@ public class DebtController {
         );
     }
 
+    @PostMapping("/order-reference/{clientReference}/payments")
+    public Debt makePaymentForOrderReference(
+            @PathVariable String clientReference,
+            @RequestBody DebtPaymentRequest request
+    ) {
+        return debtService.makePaymentForOrderReference(clientReference, request, username());
+    }
+
     private String username() {
         return SecurityContextHolder.getContext().getAuthentication().getName();
     }
