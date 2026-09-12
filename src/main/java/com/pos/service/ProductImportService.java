@@ -90,7 +90,7 @@ public class ProductImportService {
             headerStyle.setFont(headerFont);
 
             Row header = sheet.createRow(0);
-            String[] columns = {"name", "description", "costPrice", "price", "wholesalePrice", "vipPrice", "stock", "unitName", "packUnitName", "packSize", "barcode", "expiryDate"};
+            String[] columns = {"name", "category", "description", "costPrice", "price", "wholesalePrice", "vipPrice", "stock", "unitName", "packUnitName", "packSize", "barcode", "expiryDate"};
             for (int i = 0; i < columns.length; i++) {
                 Cell cell = header.createCell(i);
                 cell.setCellValue(columns[i]);
@@ -140,6 +140,7 @@ public class ProductImportService {
         }
 
         product.setName(name.trim());
+        product.setCategory(defaultText(text(row, columns, "category"), "အခြား"));
         product.setDescription(text(row, columns, "description"));
         product.setCostPrice(costPrice);
         product.setPrice(price);
@@ -188,6 +189,7 @@ public class ProductImportService {
     private String canonical(String key) {
         return switch (key) {
             case "name", "productname", "product", "itemname", "item", "ပစၥည်းအမည်", "ပစ္စည်းအမည်" -> "name";
+            case "category", "productcategory", "type", "အမျိုးအစား", "ပစ္စည်းအမျိုးအစား" -> "category";
             case "description", "desc", "details", "မှတ်ချက်" -> "description";
             case "cost", "costprice", "buyprice", "purchaseprice", "အရင်း", "အရင်းစျေး", "အရင်းဈေး" -> "costPrice";
             case "price", "sellingprice", "saleprice", "sellprice", "ရောင်းစျေး", "ရောင်းဈေး" -> "price";

@@ -36,6 +36,9 @@ public class Product {
     @Column(columnDefinition = "TEXT CHARACTER SET utf8mb4")
     private String description;
 
+    @Column(columnDefinition = "VARCHAR(100) CHARACTER SET utf8mb4")
+    private String category;
+
     @Column(nullable = false)
     private BigDecimal price;
 

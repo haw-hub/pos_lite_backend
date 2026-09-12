@@ -52,6 +52,7 @@ public class ProductService {
         validateCostPrice(productDetails);
         product.setName(productDetails.getName());
         product.setDescription(productDetails.getDescription());
+        product.setCategory(productDetails.getCategory());
         product.setPrice(productDetails.getPrice());
         product.setWholesalePrice(productDetails.getWholesalePrice());
         product.setVipPrice(productDetails.getVipPrice());
@@ -119,6 +120,11 @@ public class ProductService {
     }
 
     private void normalizeProductOptions(Product product) {
+        if (product.getCategory() == null || product.getCategory().isBlank()) {
+            product.setCategory("အခြား");
+        } else {
+            product.setCategory(product.getCategory().trim());
+        }
         if (product.getUnitName() == null || product.getUnitName().isBlank()) {
             product.setUnitName("ခု");
         }
