@@ -14,10 +14,12 @@ public class ProductService {
 
     private final ProductRepository productRepository;
     private final CurrentUserService currentUserService;
+    private final ProductCategoryService categoryService;
 
-    public ProductService(ProductRepository productRepository, CurrentUserService currentUserService) {
+    public ProductService(ProductRepository productRepository, CurrentUserService currentUserService, ProductCategoryService categoryService) {
         this.productRepository = productRepository;
         this.currentUserService = currentUserService;
+        this.categoryService = categoryService;
     }
 
     public List<Product> getAllProducts(String username) {
@@ -42,6 +44,7 @@ public class ProductService {
         product.setShop(user.getShop());
         validateCostPrice(product);
         normalizeProductOptions(product);
+        categoryService.ensureForShop(user.getShop(), product.getCategory());
         product.setDeleted(false);
         return productRepository.save(product);
     }
@@ -65,6 +68,7 @@ public class ProductService {
         product.setImageUrl(productDetails.getImageUrl());
         product.setExpiryDate(productDetails.getExpiryDate());
         normalizeProductOptions(product);
+        categoryService.ensureForShop(product.getShop(), product.getCategory());
         return productRepository.save(product);
     }
 

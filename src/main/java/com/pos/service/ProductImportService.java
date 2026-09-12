@@ -24,15 +24,18 @@ import java.util.Map;
 @Service
 public class ProductImportService {
     private final ProductRepository productRepository;
+    private final ProductCategoryService categoryService;
     private final ShopRepository shopRepository;
     private final UserRepository userRepository;
 
     public ProductImportService(
             ProductRepository productRepository,
+            ProductCategoryService categoryService,
             ShopRepository shopRepository,
             UserRepository userRepository
     ) {
         this.productRepository = productRepository;
+        this.categoryService = categoryService;
         this.shopRepository = shopRepository;
         this.userRepository = userRepository;
     }
@@ -99,17 +102,18 @@ public class ProductImportService {
 
             Row sample = sheet.createRow(1);
             sample.createCell(0).setCellValue("Example Product");
-            sample.createCell(1).setCellValue("Optional note");
-            sample.createCell(2).setCellValue(500);
-            sample.createCell(3).setCellValue(700);
-            sample.createCell(4).setCellValue(650);
-            sample.createCell(5).setCellValue(620);
-            sample.createCell(6).setCellValue(20);
-            sample.createCell(7).setCellValue("ခု");
-            sample.createCell(8).setCellValue("ပါကင်");
-            sample.createCell(9).setCellValue(12);
-            sample.createCell(10).setCellValue("885000000001");
-            sample.createCell(11).setCellValue("2026-12-31");
+            sample.createCell(1).setCellValue("အစားအသောက်");
+            sample.createCell(2).setCellValue("Optional note");
+            sample.createCell(3).setCellValue(500);
+            sample.createCell(4).setCellValue(700);
+            sample.createCell(5).setCellValue(650);
+            sample.createCell(6).setCellValue(620);
+            sample.createCell(7).setCellValue(20);
+            sample.createCell(8).setCellValue("ခု");
+            sample.createCell(9).setCellValue("ပါကင်");
+            sample.createCell(10).setCellValue(12);
+            sample.createCell(11).setCellValue("885000000001");
+            sample.createCell(12).setCellValue("2026-12-31");
 
             for (int i = 0; i < columns.length; i++) {
                 sheet.autoSizeColumn(i);
@@ -141,6 +145,7 @@ public class ProductImportService {
 
         product.setName(name.trim());
         product.setCategory(defaultText(text(row, columns, "category"), "အခြား"));
+        categoryService.ensureForShop(shop, product.getCategory());
         product.setDescription(text(row, columns, "description"));
         product.setCostPrice(costPrice);
         product.setPrice(price);
