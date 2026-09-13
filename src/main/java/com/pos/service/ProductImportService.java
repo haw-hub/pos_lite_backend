@@ -20,6 +20,7 @@ import java.time.ZoneId;
 import java.util.HashMap;
 import java.util.Locale;
 import java.util.Map;
+import com.pos.util.InputSafety;
 
 @Service
 public class ProductImportService {
@@ -143,17 +144,17 @@ public class ProductImportService {
             product.setShop(shop);
         }
 
-        product.setName(name.trim());
-        product.setCategory(defaultText(text(row, columns, "category"), "အခြား"));
+        product.setName(InputSafety.plainText(name, "Product name", 255, true));
+        product.setCategory(InputSafety.plainText(defaultText(text(row, columns, "category"), "အခြား"), "Category", 100, true));
         categoryService.ensureForShop(shop, product.getCategory());
-        product.setDescription(text(row, columns, "description"));
+        product.setDescription(InputSafety.plainText(text(row, columns, "description"), "Product description", 5000, false));
         product.setCostPrice(costPrice);
         product.setPrice(price);
         product.setWholesalePrice(money(row, columns, "wholesalePrice", false));
         product.setVipPrice(money(row, columns, "vipPrice", false));
         product.setStock(stock);
-        product.setUnitName(defaultText(text(row, columns, "unitName"), "ခု"));
-        product.setPackUnitName(text(row, columns, "packUnitName"));
+        product.setUnitName(InputSafety.plainText(defaultText(text(row, columns, "unitName"), "ခု"), "Unit name", 50, true));
+        product.setPackUnitName(InputSafety.plainText(text(row, columns, "packUnitName"), "Pack unit", 50, false));
         product.setPackSize(number(row, columns, "packSize", false, 1));
         product.setBarcode(blankToNull(barcode));
         product.setExpiryDate(date(row, columns, "expiryDate"));

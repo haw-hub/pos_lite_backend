@@ -10,6 +10,7 @@ import org.springframework.transaction.annotation.Transactional;
 import java.math.BigDecimal;
 import java.time.LocalDate;
 import java.util.List;
+import com.pos.util.InputSafety;
 
 @Service
 public class PurchaseService {
@@ -52,13 +53,15 @@ public class PurchaseService {
         ).orElseThrow(() -> new RuntimeException("Product not found"));
 
         Supplier supplier = null;
-        if (request.getSupplierName() != null && !request.getSupplierName().isBlank()) {
-            supplier = supplierRepository.findByShopIdAndNameIgnoreCase(user.getShop().getId(), request.getSupplierName().trim())
+        String supplierName = InputSafety.plainText(request.getSupplierName(), "Supplier name", 100, false);
+        String supplierPhone = InputSafety.plainText(request.getSupplierPhone(), "Supplier phone", 30, false);
+        if (supplierName != null) {
+            supplier = supplierRepository.findByShopIdAndNameIgnoreCase(user.getShop().getId(), supplierName)
                     .orElseGet(() -> {
                         Supplier created = new Supplier();
                         created.setShop(user.getShop());
-                        created.setName(request.getSupplierName().trim());
-                        created.setPhone(request.getSupplierPhone());
+                        created.setName(supplierName);
+                        created.setPhone(supplierPhone);
                         return supplierRepository.save(created);
                     });
         }
@@ -71,7 +74,7 @@ public class PurchaseService {
         purchase.setQuantity(request.getQuantity());
         purchase.setUnitCost(request.getUnitCost());
         purchase.setTotalCost(request.getUnitCost().multiply(BigDecimal.valueOf(request.getQuantity())));
-        purchase.setNote(request.getNote());
+        purchase.setNote(InputSafety.plainText(request.getNote(), "Purchase note", 1000, false));
         if (request.getPurchaseDate() != null && !request.getPurchaseDate().isBlank()) {
             purchase.setCreatedAt(LocalDate.parse(request.getPurchaseDate()).atStartOfDay());
         }

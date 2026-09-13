@@ -9,6 +9,7 @@ import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 
 import java.util.List;
+import com.pos.util.InputSafety;
 
 @Service
 public class ProductCategoryService {
@@ -101,8 +102,6 @@ public class ProductCategoryService {
 
     private String normalizeName(String name) {
         if (name == null || name.isBlank()) return OTHER_CATEGORY;
-        String normalized = name.trim();
-        if (normalized.length() > 100) throw new IllegalArgumentException("Category name is too long");
-        return normalized;
+        return InputSafety.plainText(name, "Category name", 100, true);
     }
 }

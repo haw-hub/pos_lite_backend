@@ -4,12 +4,13 @@ import com.pos.enums.UserRole;
 import jakarta.validation.constraints.NotBlank;
 import jakarta.validation.constraints.NotNull;
 import jakarta.validation.constraints.Size;
+import jakarta.validation.constraints.Pattern;
 import lombok.Data;
 
 @Data
 public class EmployeeRequest {
     @NotBlank
-    @Size(min = 3, max = 50)
+    @Pattern(regexp = "^[A-Za-z0-9._-]{3,50}$", message = "Username format is invalid")
     private String username;
 
     @NotBlank

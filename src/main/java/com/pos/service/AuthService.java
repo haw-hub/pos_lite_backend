@@ -11,6 +11,7 @@ import com.pos.enums.UserRole;
 import com.pos.repository.UserRepository;
 import com.pos.repository.ShopRepository;
 import com.pos.util.JwtUtil;
+import com.pos.util.InputSafety;
 import org.springframework.security.authentication.AuthenticationManager;
 import org.springframework.security.authentication.UsernamePasswordAuthenticationToken;
 import org.springframework.security.core.userdetails.UserDetails;
@@ -49,15 +50,16 @@ public class AuthService {
     }
 
     public AuthResponse login(LoginRequest request) {
+        String username = InputSafety.username(request.getUsername());
 
         authenticationManager.authenticate(
                 new UsernamePasswordAuthenticationToken(
-                        request.getUsername(),
+                        username,
                         request.getPassword()
                 )
         );
 
-        User user = userRepository.findByUsername(request.getUsername())
+        User user = userRepository.findByUsername(username)
                 .orElseThrow(() -> new RuntimeException("User not found"));
         if (!user.isActive()) {
             throw new RuntimeException("User account is inactive");
@@ -87,9 +89,12 @@ public class AuthService {
 
     @Transactional
     public SignupResponse signup(SignupRequest request) {
+        String username = InputSafety.username(request.getUsername());
+        String fullName = InputSafety.plainText(request.getFullName(), "Full name", 100, true);
+        String shopName = InputSafety.plainText(request.getShopName(), "Shop name", 255, false);
         // Check if username already exists
-        if (userRepository.findByUsername(request.getUsername()).isPresent()) {
-            throw new RuntimeException("Username already exists: " + request.getUsername());
+        if (userRepository.findByUsername(username).isPresent()) {
+            throw new RuntimeException("Username already exists: " + username);
         }
 
         // Check if email already exists (if email is provided)
@@ -99,18 +104,15 @@ public class AuthService {
         }
 
         Shop shop = new Shop();
-        String requestedShopName = request.getShopName();
-        shop.setName(requestedShopName == null || requestedShopName.isBlank()
-                ? request.getFullName() + " Shop"
-                : requestedShopName.trim());
+        shop.setName(shopName == null ? fullName + " Shop" : shopName);
         shop.setPhone(request.getPhone());
         subscriptionService.initializeTrial(shop);
         shop = shopRepository.save(shop);
 
         User user = new User();
-        user.setUsername(request.getUsername());
+        user.setUsername(username);
         user.setPassword(passwordEncoder.encode(request.getPassword()));
-        user.setFullName(request.getFullName());
+        user.setFullName(fullName);
         user.setEmail(request.getEmail());
         user.setPhone(request.getPhone());
         user.setRole(UserRole.ADMIN);  // Default role for new users

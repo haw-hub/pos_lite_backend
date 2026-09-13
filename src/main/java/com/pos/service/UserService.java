@@ -7,6 +7,7 @@ import com.pos.enums.UserRole;
 import com.pos.repository.UserRepository;
 import org.springframework.security.crypto.password.PasswordEncoder;
 import org.springframework.stereotype.Service;
+import com.pos.util.InputSafety;
 
 import java.util.List;
 
@@ -30,16 +31,18 @@ public class UserService {
 
     public UserResponse createEmployee(EmployeeRequest request, String username) {
         User admin = requireAdmin(username);
+        String employeeUsername = InputSafety.username(request.getUsername());
+        String fullName = InputSafety.plainText(request.getFullName(), "Full name", 100, true);
         if (request.getRole() == UserRole.ADMIN) {
             throw new IllegalArgumentException("Employee role must be MANAGER or CASHIER");
         }
-        if (userRepository.existsByUsername(request.getUsername())) {
+        if (userRepository.existsByUsername(employeeUsername)) {
             throw new IllegalArgumentException("Username already exists");
         }
         User employee = new User();
-        employee.setUsername(request.getUsername().trim().toLowerCase());
+        employee.setUsername(employeeUsername);
         employee.setPassword(passwordEncoder.encode(request.getPassword()));
-        employee.setFullName(request.getFullName());
+        employee.setFullName(fullName);
         employee.setEmail(request.getEmail());
         employee.setPhone(request.getPhone());
         employee.setRole(request.getRole());

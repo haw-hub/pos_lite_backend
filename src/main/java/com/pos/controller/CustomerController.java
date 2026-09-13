@@ -3,6 +3,7 @@ package com.pos.controller;
 import com.pos.entity.Customer;
 import com.pos.repository.CustomerRepository;
 import com.pos.service.CurrentUserService;
+import com.pos.util.InputSafety;
 import org.springframework.security.core.context.SecurityContextHolder;
 import org.springframework.web.bind.annotation.*;
 
@@ -28,6 +29,8 @@ public class CustomerController {
             @RequestBody Customer customer
     ) {
         var user = currentUserService.require(username());
+        customer.setName(InputSafety.plainText(customer.getName(), "Customer name", 100, true));
+        customer.setPhone(InputSafety.plainText(customer.getPhone(), "Customer phone", 30, true));
         customer.setId(null);
         customer.setOwner(user);
         customer.setShop(user.getShop());

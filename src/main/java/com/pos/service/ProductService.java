@@ -8,6 +8,7 @@ import org.springframework.transaction.annotation.Transactional;
 
 import java.util.List;
 import java.math.BigDecimal;
+import com.pos.util.InputSafety;
 
 @Service
 public class ProductService {
@@ -124,10 +125,14 @@ public class ProductService {
     }
 
     private void normalizeProductOptions(Product product) {
+        product.setName(InputSafety.plainText(product.getName(), "Product name", 255, true));
+        product.setDescription(InputSafety.plainText(product.getDescription(), "Product description", 5000, false));
+        product.setUnitName(InputSafety.plainText(product.getUnitName(), "Unit name", 50, false));
+        product.setPackUnitName(InputSafety.plainText(product.getPackUnitName(), "Pack unit", 50, false));
         if (product.getCategory() == null || product.getCategory().isBlank()) {
             product.setCategory("အခြား");
         } else {
-            product.setCategory(product.getCategory().trim());
+            product.setCategory(InputSafety.plainText(product.getCategory(), "Category", 100, true));
         }
         if (product.getUnitName() == null || product.getUnitName().isBlank()) {
             product.setUnitName("ခု");

@@ -8,7 +8,7 @@ import lombok.Data;
 public class SignupRequest {
 
     @NotBlank(message = "Username is required")
-    @Size(min = 3, max = 50, message = "Username must be between 3 and 50 characters")
+    @Pattern(regexp = "^[A-Za-z0-9._-]{3,50}$", message = "Username may contain only letters, numbers, dot, underscore, and hyphen")
     private String username;
 
     @NotBlank(message = "Password is required")
